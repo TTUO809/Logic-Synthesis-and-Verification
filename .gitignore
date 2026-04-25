@@ -1,5 +1,3 @@
-# Exclude entire DeepGate2 repo (third-party code)
-DeepGate2/
 # Exclude test directory
 test/
 

@@ -9,8 +9,8 @@
 
 NUM_PROC=1  # 設置並行進程數為 1
 GPUS=0      # 指定使用的 GPU 設備號為 0
-DEEPGATE_SRC="/home/c_1006/LSV/DeepGate2/src"       # 設置 DeepGate2 源代碼的路徑
-EXP_BASE="/home/c_1006/LSV/DeepGate2/exp/prob"      # 設置實驗基礎目錄路徑
+DEEPGATE_SRC="/home/c_1006/DeepGate2/src"            # 設置 DeepGate2 源代碼的路徑
+EXP_BASE="/home/c_1006/DeepGate2/exp/prob"           # 設置實驗基礎目錄路徑
 LOG_BASE="/home/c_1006/LSV/PA2/results/assignment1" # 設置日誌保存的基礎目錄
 EPOCHS=5    # 設置訓練的輪數為 5
 
