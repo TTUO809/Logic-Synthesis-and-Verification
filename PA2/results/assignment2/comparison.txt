@@ -1,0 +1,10 @@
+experiment    | Val LProb (↓) | Val LRC (↓) | Val LFunc (↓) | Val ACC (↑)
+--------------|---------------|-------------|---------------|------------
+baseline      |      0.031710 |    0.371710 |      0.139047 | 0.848710
+no_tt_loss    |      0.029340 |    0.371699 |      0.000000 | 0.722903
+homo_pi_init  |      0.031384 |    0.000000 |      0.136813 | 0.832258
+
+Interpretation:
+  - no_tt_loss   vs baseline : ACC and LFunc should WORSEN (TT loss removed)
+  - homo_pi_init vs baseline : ACC and LProb should WORSEN (PI init degraded)
+  * LRC is computed on dummy RC pairs (--no_rc); values are not meaningful.

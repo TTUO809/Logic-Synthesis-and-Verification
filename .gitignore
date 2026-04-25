@@ -1,0 +1,16 @@
+# Exclude entire DeepGate2 repo (third-party code)
+DeepGate2/
+# Exclude test directory
+test/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Large data files
+*.npz
+*.tar.bz2
+
+# Editor
+.vscode/
