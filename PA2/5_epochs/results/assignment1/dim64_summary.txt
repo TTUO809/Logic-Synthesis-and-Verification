@@ -1,0 +1,21 @@
+======================================================================
+  SUMMARY  dim_hidden = 64
+  Source log : /home/c_1006/LSV/DeepGate2/exp/prob/PA2_assignment1/dim64/logs_2026-04-24-18-40/log.txt
+  Generated  : 公曆 20廿六年 四月 廿四日 週五 廿時十八分42秒
+======================================================================
+
+  Metrics (validation split):
+  Epoch | Val LProb (Signal Prob Loss ↓) | Val ACC (TT Dist ACC ↑)
+  ------|--------------------------------|------------------------
+      1 |                       0.093345 | 0.795161
+      2 |                       0.066397 | 0.798387
+      3 |                       0.042315 | 0.809677
+      4 |                       0.033579 | 0.820323
+      5 |                       0.030562 | 0.851290
+
+  === Best / Final Results ===
+  Final epoch                       : 5
+  Val LProb (Signal Prob Val Loss)  : 0.030562  (L1 loss)
+  Val ACC (TT Dist ACC) - final     : 0.851290
+  Val ACC (TT Dist ACC) - best      : 0.851290
+
