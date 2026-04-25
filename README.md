@@ -11,7 +11,8 @@ cd LSV/
 conda create -n deepgate2 python=3.8
 conda activate deepgate2
 
-git clone https://github.com/zshi0616/DeepGate2.git
+# Clone the modified DeepGate2 (fork with PA2 changes, NOT the original)
+git clone -b pa2-modifications https://github.com/TTUO809/DeepGate2.git
 cd DeepGate2/
 
 # Install PyTorch with CUDA 11.1 first (before requirements.txt)
@@ -22,14 +23,7 @@ pip install torch-scatter==2.0.8 torch-sparse==0.6.12 \
     torch-cluster==1.5.9 torch-spline-conv==1.2.1 \
     -f https://data.pyg.org/whl/torch-1.9.0+cu111.html
 
-# Comment out packages already installed to avoid version conflicts
-sed -i 's/^torch==/#torch==/g'                   requirements.txt
-sed -i 's/^torchvision==/#torchvision==/g'       requirements.txt
-sed -i 's/^torch-scatter==/#torch-scatter==/g'   requirements.txt
-sed -i 's/^torch-sparse==/#torch-sparse==/g'     requirements.txt
-sed -i 's/^torch-cluster==/#torch-cluster==/g'   requirements.txt
-sed -i 's/^torch-spline-conv==/#torch-spline-conv==/g' requirements.txt
-
+# requirements.txt already has PyG packages commented out
 pip install -r requirements.txt
 ```
 
@@ -51,16 +45,11 @@ python ./src/prepare_dataset.py --exp_id train --aig_folder ./dataset/rawaig
 
 ---
 
-## Applying Patches to DeepGate2
+## DeepGate2 Modifications
 
-This repo includes `PA2/deepgate2_changes.patch` with all modifications made to DeepGate2 for the assignments.
+All modifications to DeepGate2 are tracked in the [`pa2-modifications`](https://github.com/TTUO809/DeepGate2/tree/pa2-modifications) branch of the fork. You can view the full diff against the original at:
 
-```bash
-cd DeepGate2/
-git apply ../PA2/deepgate2_changes.patch
-```
-
-### Summary of changes
+**[TTUO809/DeepGate2: main → pa2-modifications](https://github.com/TTUO809/DeepGate2/compare/main...pa2-modifications)**
 
 | File | Change |
 |---|---|
@@ -133,11 +122,12 @@ Results are saved to `PA2/results/assignment2/`.
 PA2/
 ├── run_assignment1.sh        # Assignment 1 training script
 ├── run_assignment2.sh        # Assignment 2 training script
-├── deepgate2_changes.patch   # All modifications to DeepGate2
 ├── SLforEDA_v0329.pdf        # Course slides
+├── report.md                 # Assignment report
 ├── assignment1_master.log    # Raw stdout from assignment 1 run
 ├── assignment2_master.log    # Raw stdout from assignment 2 run
-└── results/
-    ├── assignment1/          # Per-dim training logs and summaries
-    └── assignment2/          # Per-experiment training logs and summaries
+├── results/
+│   ├── assignment1/          # Per-dim training logs and summaries
+│   └── assignment2/          # Per-experiment training logs and summaries
+└── 5_epochs/                 # Results from 5-epoch runs
 ```
