@@ -1,8 +1,8 @@
 experiment    | Val LProb (↓) | Val LRC (↓) | Val LFunc (↓) | Val ACC (↑)
 --------------|---------------|-------------|---------------|------------
-baseline      |      0.031710 |    0.371710 |      0.139047 | 0.848710
-no_tt_loss    |      0.029340 |    0.371699 |      0.000000 | 0.722903
-homo_pi_init  |      0.031384 |    0.000000 |      0.136813 | 0.832258
+baseline      |      0.024151 |    0.097302 |      0.125278 | 0.910645
+no_tt_loss    |      0.024276 |    0.097310 |      0.000000 | 0.753871
+homo_pi_init  |      0.025419 |  100.000000 |      0.129545 | 0.863226
 
 Interpretation:
   - no_tt_loss   vs baseline : ACC and LFunc should WORSEN (TT loss removed)

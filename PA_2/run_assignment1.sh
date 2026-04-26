@@ -13,8 +13,8 @@ NUM_PROC=1  # 設置並行進程數為 1
 GPUS=0      # 指定使用的 GPU 設備號為 0
 DEEPGATE_SRC="${HOME}/DeepGate2/src"            # 設置 DeepGate2 源代碼的路徑
 EXP_BASE="${HOME}/DeepGate2/exp/prob"           # 設置實驗基礎目錄路徑
-LOG_BASE="${SCRIPT_DIR}/results/assignment1"    # 設置日誌保存的基礎目錄
-EPOCHS=5    # 設置訓練的輪數為 5
+LOG_BASE="${LOG_BASE:-${SCRIPT_DIR}/results/assignment1}"    # 設置日誌保存的基礎目錄（可由環境變數覆寫）
+EPOCHS="${EPOCHS:-5}"    # 設置訓練的輪數，預設 5（可由環境變數覆寫）
 
 mkdir -p "$LOG_BASE"    # 創建日誌輸出目錄（若目錄不存在則創建）
 
@@ -33,7 +33,7 @@ max_epoch_in_log() {
 
 # 定義解析 epoch 行的 AWK 函數
     # 解析包含 "epoch:" 的行，提取訓練指標和驗證指標
-    # 輸出格式為制表符分隔的：輪次、驗證概率損失、驗證重連接損失、驗證函數損失、驗證精度
+    # 輸出格式為制表符分隔的：輪次、驗證概率損失、驗證精度
 parse_epoch_line() {
     awk '
     {
@@ -54,7 +54,7 @@ summarize() {
 
     {
         echo "======================================================================"
-        echo "  SUMMARY  dim_hidden = ${dim}"       # 打印隱層維度摘要標題
+        echo "  SUMMARY  dim_hidden = ${dim}"       # 打印【隱層維度】摘要標題
         echo "  Source log : ${log:-<not found>}"   # 打印源日誌文件路徑，若未找到則顯示 "<not found>"
         echo "  Generated  : $(date)"               # 打印生成時間
         echo "======================================================================"
@@ -66,7 +66,7 @@ summarize() {
             return
         fi
 
-        echo "  Metrics (validation split):"        # 打印驗證指標標題
+        echo "  Per-epoch validation metrics:"  # 打印每輪次驗證指標的標題
         # 打印列名和指標說明（↓ 表示越低越好，↑ 表示越高越好）
         echo "  Epoch | Val LProb (Signal Prob Loss ↓) | Val ACC (TT Dist ACC ↑)"
         echo "  ------|--------------------------------|------------------------"
@@ -102,7 +102,7 @@ summarize() {
 # ── 實驗定義部分 ──────────────────────────────────────────────────
 DIM_LIST=(32 64 128)    # 定義隱層維度列表：32、64、128
 
-# ── Main loop ────────────────────────────────────────────────────────────────
+# ── Main loop ───────────────────────────────────────────────────────────────
 
 # 切換到 DeepGate2 源代碼目錄，若失敗則輸出錯誤並退出
 cd "$DEEPGATE_SRC" || { echo "ERROR: Cannot cd to $DEEPGATE_SRC"; exit 1; } 
@@ -111,7 +111,7 @@ cd "$DEEPGATE_SRC" || { echo "ERROR: Cannot cd to $DEEPGATE_SRC"; exit 1; }
 for DIM in "${DIM_LIST[@]}"; do
     EXP_ID="PA2_assignment1/dim${DIM}"          # 構建實驗 ID
     TRAIN_LOG="${LOG_BASE}/dim${DIM}_train.log" # 定義訓練日誌文件路徑
-    CKPT="${EXP_BASE}/${EXP_ID}/model_last.pth" # 定義模型檢查點文件路徑
+    # CKPT="${EXP_BASE}/${EXP_ID}/model_last.pth" # 定義模型檢查點文件路徑
 
     echo ""
     echo "======================================================================"
@@ -156,8 +156,8 @@ for DIM in "${DIM_LIST[@]}"; do
         --gpus "${GPUS}" --batch_size 32 --num_workers 4 \
         --num_epochs "${EPOCHS}"                         \
         --no_rc 2>&1 | tee "${TRAIN_LOG}"
-    echo "  [Train] Complete for dim${DIM}" # 打印訓練完成信息
 
+    echo "  [Train] Complete for dim${DIM}" # 打印訓練完成信息
     summarize "$DIM"    # 生成該維度的摘要
 done
 
@@ -181,13 +181,11 @@ COMPARE="${LOG_BASE}/comparison.txt"    # 定義對比結果輸出文件路徑
             last_line=$(grep "epoch:" "$log" | tail -1) # 提取日誌文件中最後一個包含 "epoch:" 的行
             best_acc=$(grep "epoch:" "$log" | grep -oP "ACC \K[0-9.]+" | sort -n | tail -1)     # 從日誌中提取所有精度值並找到最高的
 
-            # 檢查是否成功提取
+            # 檢查是否成功提取最後一行，若成功則解析並格式化輸出指標數據，否則輸出 N/A
             if [ -n "$last_line" ]; then
-                # 解析 epoch 行
                 echo "$last_line" | parse_epoch_line | \
-                    # 格式化打印實驗名稱和各項指標
                     awk -F'\t' -v dim="$DIM" -v best_acc="$best_acc" '{
-                        printf "%10d | %25.6f | %25s | %s\n", dim, $2, $3, best_acc
+                        printf "%10d | %25s | %25s | %s\n", dim, $2, $3, best_acc
                     }'
             else
                 # 若日誌為空則打印 N/A
@@ -198,7 +196,12 @@ COMPARE="${LOG_BASE}/comparison.txt"    # 定義對比結果輸出文件路徑
             printf "%10d | %25s | %25s | %s\n" "$DIM" "N/A" "N/A" "N/A"
         fi
     done
-
+    echo ""
+    echo "Interpretation:"  # 打印結果解讀提示
+    # 說明：no_tt_loss 相比 baseline，精度應該下降（因為 TT 損失被移除）
+    echo "  - no_tt_loss   vs baseline : ACC and LFunc should WORSEN (TT loss removed)"
+    # 說明：homo_pi_init 相比 baseline，ACC 和 LProb 應該下降（PI 初始化均質化降低區分度）
+    echo "  - homo_pi_init vs baseline : ACC and LProb should WORSEN (PI initialized homogeneously)"
 } | tee "$COMPARE"  # 將輸出同時顯示到屏幕和保存到文件
 
 echo ""

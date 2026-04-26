@@ -1,6 +1,7 @@
 # Exclude test directory
-test/
+PA_2/test/*
 !PA_2/test/env_final_check.py
+
 
 # Python cache
 __pycache__/

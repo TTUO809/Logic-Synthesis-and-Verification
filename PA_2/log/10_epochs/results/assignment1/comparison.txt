@@ -1,0 +1,9 @@
+dim_hidden | Val LProb (Signal Prob ↓) | TT Dist Val ACC final (↑) | TT Dist Val ACC best (↑)
+-----------|---------------------------|---------------------------|-------------------------
+        32 |                  0.035522 |                  0.867097 | 0.867097
+        64 |                  0.024337 |                  0.910968 | 0.910968
+       128 |                  0.023696 |                  0.911935 | 0.911935
+
+Interpretation:
+  - no_tt_loss   vs baseline : ACC and LFunc should WORSEN (TT loss removed)
+  - homo_pi_init vs baseline : ACC and LProb should WORSEN (PI initialized homogeneously)

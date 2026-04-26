@@ -21,10 +21,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"  # 腳本所在目錄
 
 NUM_PROC=1  # 設置並行進程數為 1
 GPUS=0      # 指定使用的 GPU 設備號為 0
-DEEPGATE_SRC="${HOME}/DeepGate2/src"            # 設置 DeepGate2 源代碼的路徑
-EXP_BASE="${HOME}/DeepGate2/exp/prob"           # 設置實驗基礎目錄路徑
-LOG_BASE="${SCRIPT_DIR}/results/assignment2"    # 設置日誌保存的基礎目錄
-EPOCHS=5    # 設置訓練的輪數為 5
+DEEPGATE_ROOT="${HOME}/DeepGate2"               # 設置 DeepGate2 的根目錄
+DEEPGATE_SRC="${DEEPGATE_ROOT}/src"             # 設置 DeepGate2 源代碼的路徑
+EXP_BASE="${DEEPGATE_ROOT}/exp/prob"            # 設置實驗基礎目錄路徑
+LOG_BASE="${LOG_BASE:-${SCRIPT_DIR}/results/assignment2}"    # 設置日誌保存的基礎目錄（可由環境變數覆寫）
+EPOCHS="${EPOCHS:-5}"    # 設置訓練的輪數，預設 5（可由環境變數覆寫）
 DIM=64      # 設置隱層維度為 64
 
 mkdir -p "$LOG_BASE"    # 創建日誌輸出目錄（若目錄不存在則創建）
@@ -53,21 +54,21 @@ parse_epoch_line() {
         n = split($0, lr, "LRC ");   val_lr = (n >= 3) ? sprintf("%.6f", lr[3]+0) : "N/A"   # 提取 LRC 值，若不存在則標記為 "N/A"
         n = split($0, lf, "LFunc "); val_lf = (n >= 3) ? sprintf("%.6f", lf[3]+0) : "N/A"   # 提取 LFunc 值，若不存在則標記為 "N/A"
         match($0, /ACC ([0-9.]+)/, a); acc = (a[1] != "") ? sprintf("%.6f", a[1]+0) : "N/A" # 從輸入行中提取精度（ ACC ）值
-        printf "%d\t%s\t%s\t%s\t%s\n", epoch, val_lp, val_lr, val_lf, acc   # 以制表符分隔格式打印提取的指標
+        printf "%d\t%s\t%s\t%s\t%s\n", epoch, val_lp, val_lr, val_lf, acc       # 以制表符分隔格式打印提取的指標
     }'
 }
 
 # 定義生成實驗摘要的函數
 summarize() {
-    local name=$1                               # 獲取實驗名稱參數
-    local exp_id="PA2_assignment2/${name}"      # 構建實驗 ID
-    local out="${LOG_BASE}/${name}_summary.txt" # 定義輸出摘要文件的路徑
-    local log                                   # 聲明日誌文件變數
-    log=$(latest_log "$exp_id")                 # 獲取該實驗的最新日誌文件路徑
+    local name=$1                                   # 獲取實驗名稱參數
+    local exp_id="PA2_assignment2/${name}"          # 構建實驗 ID
+    local out="${LOG_BASE}/${name}_summary.txt"     # 定義輸出摘要文件的路徑
+    local log                                       # 聲明日誌文件變數
+    log=$(latest_log "$exp_id")                     # 獲取該實驗的最新日誌文件路徑
 
     {
         echo "======================================================================"
-        echo "  SUMMARY  experiment = ${name}"      # 打印實驗名稱
+        echo "  SUMMARY  experiment = ${name}"      # 打印【實驗名稱】摘要標題
         echo "  Source log : ${log:-<not found>}"   # 打印源日誌文件路徑，若未找到則顯示 "<not found>"
         echo "  Generated  : $(date)"               # 打印生成時間
         echo "======================================================================"
@@ -91,7 +92,7 @@ summarize() {
 
         echo ""
 
-        echo "  === Final epoch ==="    # 打印最終輪次標題
+        echo "  === Final Epoch ==="    # 打印最終輪次標題
         local last_line # 聲明最後一行變數
         last_line=$(grep "epoch:" "$log" | tail -1) # 提取日誌文件中最後一個包含 "epoch:" 的行
         
@@ -169,7 +170,7 @@ for NAME in "${EXP_LIST[@]}"; do
     # 設置迭代輪數為 1
     # 指定 GPU 設備、批量大小為 32、數據加載工作進程數為 4
     # 指定訓練輪次
-    # 添加額外參數，將標準輸出和錯誤輸出同時保存到日誌文件
+    # 禁用重連接訓練，【添加額外參數】，將標準輸出和錯誤輸出同時保存到日誌文件
     python3 -m torch.distributed.run --nproc_per_node=$NUM_PROC ./main.py prob \
         --exp_id    "${EXP_ID}"                          \
         --data_dir  ../data/train                        \
@@ -181,8 +182,8 @@ for NAME in "${EXP_LIST[@]}"; do
         --gpus "${GPUS}" --batch_size 32 --num_workers 4 \
         --num_epochs "${EPOCHS}"                         \
         --no_rc ${EXTRA} 2>&1 | tee "${TRAIN_LOG}"
-    echo "  [Train] Complete for ${NAME}"   # 打印訓練完成信息
 
+    echo "  [Train] Complete for ${NAME}"   # 打印訓練完成信息
     summarize "$NAME"   # 生成該實驗的摘要
 done
 
@@ -205,12 +206,12 @@ COMPARE="${LOG_BASE}/comparison.txt"    # 定義對比結果輸出文件路徑
         if [ -n "$log" ]; then
             last_line=$(grep "epoch:" "$log" | tail -1) # 提取日誌文件中最後一個包含 "epoch:" 的行
             
-            # 檢查是否成功提取
+            # 檢查是否成功提取最後一行，若成功則解析並格式化輸出指標數據，否則輸出 N/A
             if [ -n "$last_line" ]; then
-                # 解析 epoch 行
                 echo "$last_line" | parse_epoch_line | \
-                    # 格式化打印實驗名稱和各項指標
-                    awk -F'\t' -v n="$NAME" '{ printf "%-13s | %13s | %11s | %13s | %s\n", n, $2, $3, $4, $5 }'
+                    awk -F'\t' -v n="$NAME" '{
+                        printf "%-13s | %13s | %11s | %13s | %s\n", n, $2, $3, $4, $5 
+                    }'
             else
                 # 若日誌為空則打印 N/A
                 printf "%-13s | %13s | %11s | %13s | %s\n" "$NAME" "N/A" "N/A" "N/A" "N/A"
@@ -221,7 +222,7 @@ COMPARE="${LOG_BASE}/comparison.txt"    # 定義對比結果輸出文件路徑
         fi
     done
     echo ""
-    echo "Interpretation:"  # 打印解釋標題
+    echo "Interpretation:"  # 打印結果解讀提示
     # 說明：no_tt_loss 相比 baseline，精度應該下降（因為 TT 損失被移除）
     echo "  - no_tt_loss   vs baseline : ACC and LFunc should WORSEN (TT loss removed)"
     # 說明：homo_pi_init 相比 baseline，ACC 和 LProb 應該下降（PI 初始化均質化降低區分度）
@@ -233,4 +234,4 @@ echo ""
 echo "Results saved to: ${LOG_BASE}/"   # 打印結果保存位置
 echo "  {name}_train.log    — full training stdout per experiment"      # 說明：每個實驗的完整訓練標準輸出日誌
 echo "  {name}_summary.txt  — epoch-by-epoch metrics per experiment"    # 說明：每個實驗的逐個 epoch 指標摘要
-echo "  comparison.txt      — cross-experiment comparison table"        # 說明：跨實驗對比表格
+echo "  comparison.txt      — cross-experiment comparison table"        # 說明：跨實驗比較的總結表格文件

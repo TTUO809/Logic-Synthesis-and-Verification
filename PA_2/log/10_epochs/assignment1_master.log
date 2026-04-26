@@ -1,0 +1,499 @@
+
+======================================================================
+  dim_hidden = 32  |  公曆 20廿六年 四月 廿六日 週日 四時二分五秒
+======================================================================
+  [Train]  Training for dim32 (10 epochs)...
+[INFO] 2026-04-26 04:02:05,915 run: Running torch.distributed.run with args: ['/home/c_1006/miniconda3/envs/deepgate2/lib/python3.8/site-packages/torch/distributed/run.py', '--nproc_per_node=1', './main.py', 'prob', '--exp_id', 'PA2_assignment1/dim32', '--data_dir', '../data/train', '--dim_hidden', '32', '--reg_loss', 'l1', '--cls_loss', 'bce', '--arch', 'mlpgnn', '--Prob_weight', '3', '--RC_weight', '1', '--Func_weight', '2', '--num_rounds', '1', '--gpus', '0', '--batch_size', '32', '--num_workers', '4', '--num_epochs', '10', '--no_rc']
+[INFO] 2026-04-26 04:02:05,916 run: Using nproc_per_node=1.
+[INFO] 2026-04-26 04:02:05,916 api: Starting elastic_operator with launch configs:
+  entrypoint       : ./main.py
+  min_nodes        : 1
+  max_nodes        : 1
+  nproc_per_node   : 1
+  run_id           : none
+  rdzv_backend     : static
+  rdzv_endpoint    : 127.0.0.1:29500
+  rdzv_configs     : {'rank': 0, 'timeout': 900}
+  max_restarts     : 3
+  monitor_interval : 5
+  log_dir          : None
+  metrics_cfg      : {}
+
+[INFO] 2026-04-26 04:02:05,916 local_elastic_agent: log directory set to: /tmp/torchelastic_z2oxoc8m/none_nl0bhj3b
+[INFO] 2026-04-26 04:02:05,916 api: [default] starting workers for entrypoint: python3
+[INFO] 2026-04-26 04:02:05,917 api: [default] Rendezvous'ing worker group
+[INFO] 2026-04-26 04:02:05,917 static_tcp_rendezvous: Creating TCPStore as the c10d::Store implementation
+/home/c_1006/miniconda3/envs/deepgate2/lib/python3.8/site-packages/torch/distributed/elastic/utils/store.py:52: FutureWarning: This is an experimental API and will be changed in future.
+  warnings.warn(
+[INFO] 2026-04-26 04:02:05,917 api: [default] Rendezvous complete for workers. Result:
+  restart_count=0
+  master_addr=127.0.0.1
+  master_port=29500
+  group_rank=0
+  group_world_size=1
+  local_ranks=[0]
+  role_ranks=[0]
+  global_ranks=[0]
+  role_world_sizes=[1]
+  global_world_sizes=[1]
+
+[INFO] 2026-04-26 04:02:05,917 api: [default] Starting worker group
+[INFO] 2026-04-26 04:02:05,917 __init__: Setting worker0 reply file to: /tmp/torchelastic_z2oxoc8m/none_nl0bhj3b/attempt_0/0/error.json
+The output will be saved to  /home/c_1006/DeepGate2/src/../exp/prob/PA2_assignment1/dim32
+Setting random seed for reproductivity..
+==> Using settings Namespace(Func_weight=2.0, Prob_weight=3.0, RC_weight=1.0, Trans_weight=0, activation_layer='relu', aggr_function='tfmlp', aggr_state=False, arch='mlpgnn', batch_size=32, circuit_file='graphs.npz', cls_loss='bce', cop_only=False, custom_backward=False, data_dir='../data/train', debug=0, debug_dir='/home/c_1006/DeepGate2/src/../exp/prob/PA2_assignment1/dim32/debug', diff_multiplier=10, dim_edge_feature=16, dim_hidden=32, dim_mlp=32, dim_node_feature=3, dim_pred=1, disable_encode=False, enable_aig=True, eplison=0.4, exp_depth=3, exp_dir='/home/c_1006/DeepGate2/src/../exp/prob', exp_id='PA2_assignment1/dim32', gate_to_index={'PI': 0, 'AND': 1, 'NOT': 2}, gate_types='*', gpus=[0], gpus_str='0', grad_clip=0.0, hide_data_time=False, homo_pi_init=False, init_hidden=False, intermediate_supervision=False, k_step=10.0, label_file='labels.npz', load_model='', local_rank=0, logic_diff_embedding='positional', logic_implication=False, lr=0.0001, lr_step=[30, 45], mask=False, master_batch_size=-1, max_n=10, metric='loss', min_n=3, mul_mlp=False, n_pairs=10000, no_func=False, no_keep_input=False, no_node_cop=False, no_rc=True, no_reverse=False, no_trans=False, node_reconv=False, norm_layer='batchnorm', not_cuda_benchmark=False, num_aggr=3, num_epochs=10, num_fc=3, num_gate_types=3, num_iters=-1, num_rounds=1, num_workers=4, p_geo=0.4, p_k_2=0.3, predict_diff=False, pretrained_path='../exp/pretrained/pretrain_l1/model_last.pth', print_iter=0, prob_loss=False, prob_weight=0.1, random_seed=208, reconv_skip_connection=False, reg_loss='l1', reload_dataset=False, resume=False, reverse=True, root_dir='/home/c_1006/DeepGate2/src/..', sat_loss='smoothstep', save_all=False, save_dir='/home/c_1006/DeepGate2/src/../exp/prob/PA2_assignment1/dim32', save_intervals=5, seperate_hidden=False, small_train=False, spc_exp_id='', task='prob', temperature=0.01, test_data_dir=None, test_split='test', trainval_split=0.9, un_directed=False, update_function='gru', use_aig=False, use_edge_attr=False, use_logic_diff=False, val_only=False, weight_decay=1e-10, wx_mlp=False, wx_update=False)
+Training in single device:  cuda:0
+==> Loading dataset from:  ../data/train
+Size:  9757
+Splitting the dataset into training and validation sets..
+# training circuits:  8781
+# validation circuits:  976
+==> Creating model...
+MLPGate(
+  (aggr_and_strc): TFMLP(
+    (attn_lin): Linear(in_features=64, out_features=1, bias=True)
+    (msg_q): Linear(in_features=32, out_features=32, bias=True)
+    (msg_k): Linear(in_features=32, out_features=32, bias=True)
+    (msg_v): Linear(in_features=32, out_features=32, bias=True)
+  )
+  (aggr_and_func): TFMLP(
+    (attn_lin): Linear(in_features=64, out_features=1, bias=True)
+    (msg_q): Linear(in_features=64, out_features=32, bias=True)
+    (msg_k): Linear(in_features=64, out_features=32, bias=True)
+    (msg_v): Linear(in_features=64, out_features=32, bias=True)
+  )
+  (aggr_not_strc): TFMLP(
+    (attn_lin): Linear(in_features=64, out_features=1, bias=True)
+    (msg_q): Linear(in_features=32, out_features=32, bias=True)
+    (msg_k): Linear(in_features=32, out_features=32, bias=True)
+    (msg_v): Linear(in_features=32, out_features=32, bias=True)
+  )
+  (aggr_not_func): TFMLP(
+    (attn_lin): Linear(in_features=64, out_features=1, bias=True)
+    (msg_q): Linear(in_features=32, out_features=32, bias=True)
+    (msg_k): Linear(in_features=32, out_features=32, bias=True)
+    (msg_v): Linear(in_features=32, out_features=32, bias=True)
+  )
+  (update_and_strc): GRU(32, 32)
+  (update_and_func): GRU(32, 32)
+  (update_not_strc): GRU(32, 32)
+  (update_not_func): GRU(32, 32)
+  (readout_prob): MLP(
+    (fc): Sequential(
+      (0): Linear(in_features=32, out_features=32, bias=True)
+      (1): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ReLU(inplace=True)
+      (3): Dropout(p=0.2, inplace=False)
+      (4): Linear(in_features=32, out_features=32, bias=True)
+      (5): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (6): ReLU(inplace=True)
+      (7): Dropout(p=0.2, inplace=False)
+      (8): Linear(in_features=32, out_features=1, bias=True)
+    )
+  )
+  (readout_trans): MLP(
+    (fc): Sequential(
+      (0): Linear(in_features=32, out_features=32, bias=True)
+      (1): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ReLU(inplace=True)
+      (3): Dropout(p=0.2, inplace=False)
+      (4): Linear(in_features=32, out_features=32, bias=True)
+      (5): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (6): ReLU(inplace=True)
+      (7): Dropout(p=0.2, inplace=False)
+      (8): Linear(in_features=32, out_features=1, bias=True)
+      (9): Sigmoid()
+    )
+  )
+  (readout_rc): MLP(
+    (fc): Sequential(
+      (0): Linear(in_features=64, out_features=32, bias=True)
+      (1): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): Dropout(p=0.2, inplace=False)
+      (3): Linear(in_features=32, out_features=32, bias=True)
+      (4): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (5): Dropout(p=0.2, inplace=False)
+      (6): Linear(in_features=32, out_features=1, bias=True)
+      (7): Sigmoid()
+    )
+  )
+  (hf_emd_int): Linear(in_features=1, out_features=32, bias=True)
+)
+==> Starting training...
+[W pthreadpool-cpp.cc:90] Warning: Leaking Caffe2 thread-pool after fork. (function pthreadpool)
+[W pthreadpool-cpp.cc:90] Warning: Leaking Caffe2 thread-pool after fork. (function pthreadpool)
+[W pthreadpool-cpp.cc:90] Warning: Leaking Caffe2 thread-pool after fork. (function pthreadpool)
+[W pthreadpool-cpp.cc:90] Warning: Leaking Caffe2 thread-pool after fork. (function pthreadpool)
+[INFO] 2026-04-26 05:08:04,721 api: [default] worker group successfully finished. Waiting 300 seconds for other agents to finish.
+[INFO] 2026-04-26 05:08:04,721 api: Local worker group finished (SUCCEEDED). Waiting 300 seconds for other agents to finish
+/home/c_1006/miniconda3/envs/deepgate2/lib/python3.8/site-packages/torch/distributed/elastic/utils/store.py:70: FutureWarning: This is an experimental API and will be changed in future.
+  warnings.warn(
+[INFO] 2026-04-26 05:08:04,721 api: Done waiting for other agents. Elapsed: 0.0002887248992919922 seconds
+{"name": "torchelastic.worker.status.SUCCEEDED", "source": "WORKER", "timestamp": 0, "metadata": {"run_id": "none", "global_rank": 0, "group_rank": 0, "worker_id": "1447946", "role": "default", "hostname": "alda", "state": "SUCCEEDED", "total_run_time": 3958, "rdzv_backend": "static", "raw_error": null, "metadata": "{\"group_world_size\": 1, \"entry_point\": \"python3\", \"local_rank\": [0], \"role_rank\": [0], \"role_world_size\": [1]}", "agent_restarts": 0}}
+{"name": "torchelastic.worker.status.SUCCEEDED", "source": "AGENT", "timestamp": 0, "metadata": {"run_id": "none", "global_rank": null, "group_rank": 0, "worker_id": null, "role": "default", "hostname": "alda", "state": "SUCCEEDED", "total_run_time": 3958, "rdzv_backend": "static", "raw_error": null, "metadata": "{\"group_world_size\": 1, \"entry_point\": \"python3\"}", "agent_restarts": 0}}
+  [Train] Complete for dim32
+======================================================================
+  SUMMARY  dim_hidden = 32
+  Source log : /home/c_1006/DeepGate2/exp/prob/PA2_assignment1/dim32/logs_2026-04-26-04-02/log.txt
+  Generated  : 公曆 20廿六年 四月 廿六日 週日 五時八分四秒
+======================================================================
+
+  Per-epoch validation metrics:
+  Epoch | Val LProb (Signal Prob Loss ↓) | Val ACC (TT Dist ACC ↑)
+  ------|--------------------------------|------------------------
+      1 |                       0.132608 | 0.819677
+      2 |                       0.081799 | 0.793548
+      3 |                       0.077942 | 0.779677
+      4 |                       0.067498 | 0.817742
+      5 |                       0.050534 | 0.828710
+      6 |                       0.043799 | 0.816129
+      7 |                       0.042671 | 0.834194
+      8 |                       0.044585 | 0.845484
+      9 |                       0.038039 | 0.858387
+     10 |                       0.035522 | 0.867097
+
+  === Best / Final Results ===
+  Final epoch                       : 10
+  Val LProb (Signal Prob Val Loss)  : 0.035522
+  Val ACC (TT Dist ACC) - final     : 0.867097
+  Val ACC (TT Dist ACC) - best      : 0.867097
+
+
+======================================================================
+  dim_hidden = 64  |  公曆 20廿六年 四月 廿六日 週日 五時八分四秒
+======================================================================
+  [Train]  Training for dim64 (10 epochs)...
+[INFO] 2026-04-26 05:08:05,276 run: Running torch.distributed.run with args: ['/home/c_1006/miniconda3/envs/deepgate2/lib/python3.8/site-packages/torch/distributed/run.py', '--nproc_per_node=1', './main.py', 'prob', '--exp_id', 'PA2_assignment1/dim64', '--data_dir', '../data/train', '--dim_hidden', '64', '--reg_loss', 'l1', '--cls_loss', 'bce', '--arch', 'mlpgnn', '--Prob_weight', '3', '--RC_weight', '1', '--Func_weight', '2', '--num_rounds', '1', '--gpus', '0', '--batch_size', '32', '--num_workers', '4', '--num_epochs', '10', '--no_rc']
+[INFO] 2026-04-26 05:08:05,277 run: Using nproc_per_node=1.
+[INFO] 2026-04-26 05:08:05,277 api: Starting elastic_operator with launch configs:
+  entrypoint       : ./main.py
+  min_nodes        : 1
+  max_nodes        : 1
+  nproc_per_node   : 1
+  run_id           : none
+  rdzv_backend     : static
+  rdzv_endpoint    : 127.0.0.1:29500
+  rdzv_configs     : {'rank': 0, 'timeout': 900}
+  max_restarts     : 3
+  monitor_interval : 5
+  log_dir          : None
+  metrics_cfg      : {}
+
+[INFO] 2026-04-26 05:08:05,278 local_elastic_agent: log directory set to: /tmp/torchelastic_00keg8iu/none_f4zct8if
+[INFO] 2026-04-26 05:08:05,278 api: [default] starting workers for entrypoint: python3
+[INFO] 2026-04-26 05:08:05,278 api: [default] Rendezvous'ing worker group
+[INFO] 2026-04-26 05:08:05,278 static_tcp_rendezvous: Creating TCPStore as the c10d::Store implementation
+/home/c_1006/miniconda3/envs/deepgate2/lib/python3.8/site-packages/torch/distributed/elastic/utils/store.py:52: FutureWarning: This is an experimental API and will be changed in future.
+  warnings.warn(
+[INFO] 2026-04-26 05:08:05,278 api: [default] Rendezvous complete for workers. Result:
+  restart_count=0
+  master_addr=127.0.0.1
+  master_port=29500
+  group_rank=0
+  group_world_size=1
+  local_ranks=[0]
+  role_ranks=[0]
+  global_ranks=[0]
+  role_world_sizes=[1]
+  global_world_sizes=[1]
+
+[INFO] 2026-04-26 05:08:05,278 api: [default] Starting worker group
+[INFO] 2026-04-26 05:08:05,278 __init__: Setting worker0 reply file to: /tmp/torchelastic_00keg8iu/none_f4zct8if/attempt_0/0/error.json
+The output will be saved to  /home/c_1006/DeepGate2/src/../exp/prob/PA2_assignment1/dim64
+Setting random seed for reproductivity..
+==> Using settings Namespace(Func_weight=2.0, Prob_weight=3.0, RC_weight=1.0, Trans_weight=0, activation_layer='relu', aggr_function='tfmlp', aggr_state=False, arch='mlpgnn', batch_size=32, circuit_file='graphs.npz', cls_loss='bce', cop_only=False, custom_backward=False, data_dir='../data/train', debug=0, debug_dir='/home/c_1006/DeepGate2/src/../exp/prob/PA2_assignment1/dim64/debug', diff_multiplier=10, dim_edge_feature=16, dim_hidden=64, dim_mlp=32, dim_node_feature=3, dim_pred=1, disable_encode=False, enable_aig=True, eplison=0.4, exp_depth=3, exp_dir='/home/c_1006/DeepGate2/src/../exp/prob', exp_id='PA2_assignment1/dim64', gate_to_index={'PI': 0, 'AND': 1, 'NOT': 2}, gate_types='*', gpus=[0], gpus_str='0', grad_clip=0.0, hide_data_time=False, homo_pi_init=False, init_hidden=False, intermediate_supervision=False, k_step=10.0, label_file='labels.npz', load_model='', local_rank=0, logic_diff_embedding='positional', logic_implication=False, lr=0.0001, lr_step=[30, 45], mask=False, master_batch_size=-1, max_n=10, metric='loss', min_n=3, mul_mlp=False, n_pairs=10000, no_func=False, no_keep_input=False, no_node_cop=False, no_rc=True, no_reverse=False, no_trans=False, node_reconv=False, norm_layer='batchnorm', not_cuda_benchmark=False, num_aggr=3, num_epochs=10, num_fc=3, num_gate_types=3, num_iters=-1, num_rounds=1, num_workers=4, p_geo=0.4, p_k_2=0.3, predict_diff=False, pretrained_path='../exp/pretrained/pretrain_l1/model_last.pth', print_iter=0, prob_loss=False, prob_weight=0.1, random_seed=208, reconv_skip_connection=False, reg_loss='l1', reload_dataset=False, resume=False, reverse=True, root_dir='/home/c_1006/DeepGate2/src/..', sat_loss='smoothstep', save_all=False, save_dir='/home/c_1006/DeepGate2/src/../exp/prob/PA2_assignment1/dim64', save_intervals=5, seperate_hidden=False, small_train=False, spc_exp_id='', task='prob', temperature=0.01, test_data_dir=None, test_split='test', trainval_split=0.9, un_directed=False, update_function='gru', use_aig=False, use_edge_attr=False, use_logic_diff=False, val_only=False, weight_decay=1e-10, wx_mlp=False, wx_update=False)
+Training in single device:  cuda:0
+==> Loading dataset from:  ../data/train
+Size:  9757
+Splitting the dataset into training and validation sets..
+# training circuits:  8781
+# validation circuits:  976
+==> Creating model...
+MLPGate(
+  (aggr_and_strc): TFMLP(
+    (attn_lin): Linear(in_features=128, out_features=1, bias=True)
+    (msg_q): Linear(in_features=64, out_features=64, bias=True)
+    (msg_k): Linear(in_features=64, out_features=64, bias=True)
+    (msg_v): Linear(in_features=64, out_features=64, bias=True)
+  )
+  (aggr_and_func): TFMLP(
+    (attn_lin): Linear(in_features=128, out_features=1, bias=True)
+    (msg_q): Linear(in_features=128, out_features=64, bias=True)
+    (msg_k): Linear(in_features=128, out_features=64, bias=True)
+    (msg_v): Linear(in_features=128, out_features=64, bias=True)
+  )
+  (aggr_not_strc): TFMLP(
+    (attn_lin): Linear(in_features=128, out_features=1, bias=True)
+    (msg_q): Linear(in_features=64, out_features=64, bias=True)
+    (msg_k): Linear(in_features=64, out_features=64, bias=True)
+    (msg_v): Linear(in_features=64, out_features=64, bias=True)
+  )
+  (aggr_not_func): TFMLP(
+    (attn_lin): Linear(in_features=128, out_features=1, bias=True)
+    (msg_q): Linear(in_features=64, out_features=64, bias=True)
+    (msg_k): Linear(in_features=64, out_features=64, bias=True)
+    (msg_v): Linear(in_features=64, out_features=64, bias=True)
+  )
+  (update_and_strc): GRU(64, 64)
+  (update_and_func): GRU(64, 64)
+  (update_not_strc): GRU(64, 64)
+  (update_not_func): GRU(64, 64)
+  (readout_prob): MLP(
+    (fc): Sequential(
+      (0): Linear(in_features=64, out_features=32, bias=True)
+      (1): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ReLU(inplace=True)
+      (3): Dropout(p=0.2, inplace=False)
+      (4): Linear(in_features=32, out_features=32, bias=True)
+      (5): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (6): ReLU(inplace=True)
+      (7): Dropout(p=0.2, inplace=False)
+      (8): Linear(in_features=32, out_features=1, bias=True)
+    )
+  )
+  (readout_trans): MLP(
+    (fc): Sequential(
+      (0): Linear(in_features=64, out_features=32, bias=True)
+      (1): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ReLU(inplace=True)
+      (3): Dropout(p=0.2, inplace=False)
+      (4): Linear(in_features=32, out_features=32, bias=True)
+      (5): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (6): ReLU(inplace=True)
+      (7): Dropout(p=0.2, inplace=False)
+      (8): Linear(in_features=32, out_features=1, bias=True)
+      (9): Sigmoid()
+    )
+  )
+  (readout_rc): MLP(
+    (fc): Sequential(
+      (0): Linear(in_features=128, out_features=32, bias=True)
+      (1): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): Dropout(p=0.2, inplace=False)
+      (3): Linear(in_features=32, out_features=32, bias=True)
+      (4): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (5): Dropout(p=0.2, inplace=False)
+      (6): Linear(in_features=32, out_features=1, bias=True)
+      (7): Sigmoid()
+    )
+  )
+  (hf_emd_int): Linear(in_features=1, out_features=64, bias=True)
+)
+==> Starting training...
+[W pthreadpool-cpp.cc:90] Warning: Leaking Caffe2 thread-pool after fork. (function pthreadpool)
+[W pthreadpool-cpp.cc:90] Warning: Leaking Caffe2 thread-pool after fork. (function pthreadpool)
+[W pthreadpool-cpp.cc:90] Warning: Leaking Caffe2 thread-pool after fork. (function pthreadpool)
+[W pthreadpool-cpp.cc:90] Warning: Leaking Caffe2 thread-pool after fork. (function pthreadpool)
+[INFO] 2026-04-26 06:13:49,044 api: [default] worker group successfully finished. Waiting 300 seconds for other agents to finish.
+[INFO] 2026-04-26 06:13:49,045 api: Local worker group finished (SUCCEEDED). Waiting 300 seconds for other agents to finish
+/home/c_1006/miniconda3/envs/deepgate2/lib/python3.8/site-packages/torch/distributed/elastic/utils/store.py:70: FutureWarning: This is an experimental API and will be changed in future.
+  warnings.warn(
+[INFO] 2026-04-26 06:13:49,045 api: Done waiting for other agents. Elapsed: 0.0002880096435546875 seconds
+{"name": "torchelastic.worker.status.SUCCEEDED", "source": "WORKER", "timestamp": 0, "metadata": {"run_id": "none", "global_rank": 0, "group_rank": 0, "worker_id": "1453682", "role": "default", "hostname": "alda", "state": "SUCCEEDED", "total_run_time": 3943, "rdzv_backend": "static", "raw_error": null, "metadata": "{\"group_world_size\": 1, \"entry_point\": \"python3\", \"local_rank\": [0], \"role_rank\": [0], \"role_world_size\": [1]}", "agent_restarts": 0}}
+{"name": "torchelastic.worker.status.SUCCEEDED", "source": "AGENT", "timestamp": 0, "metadata": {"run_id": "none", "global_rank": null, "group_rank": 0, "worker_id": null, "role": "default", "hostname": "alda", "state": "SUCCEEDED", "total_run_time": 3943, "rdzv_backend": "static", "raw_error": null, "metadata": "{\"group_world_size\": 1, \"entry_point\": \"python3\"}", "agent_restarts": 0}}
+  [Train] Complete for dim64
+======================================================================
+  SUMMARY  dim_hidden = 64
+  Source log : /home/c_1006/DeepGate2/exp/prob/PA2_assignment1/dim64/logs_2026-04-26-05-08/log.txt
+  Generated  : 公曆 20廿六年 四月 廿六日 週日 六時十三分49秒
+======================================================================
+
+  Per-epoch validation metrics:
+  Epoch | Val LProb (Signal Prob Loss ↓) | Val ACC (TT Dist ACC ↑)
+  ------|--------------------------------|------------------------
+      1 |                       0.079139 | 0.800323
+      2 |                       0.058357 | 0.796129
+      3 |                       0.045008 | 0.803871
+      4 |                       0.038454 | 0.820968
+      5 |                       0.038891 | 0.851613
+      6 |                       0.032651 | 0.853226
+      7 |                       0.029560 | 0.877097
+      8 |                       0.029870 | 0.901935
+      9 |                       0.028979 | 0.907097
+     10 |                       0.024337 | 0.910968
+
+  === Best / Final Results ===
+  Final epoch                       : 10
+  Val LProb (Signal Prob Val Loss)  : 0.024337
+  Val ACC (TT Dist ACC) - final     : 0.910968
+  Val ACC (TT Dist ACC) - best      : 0.910968
+
+
+======================================================================
+  dim_hidden = 128  |  公曆 20廿六年 四月 廿六日 週日 六時十三分49秒
+======================================================================
+  [Train]  Training for dim128 (10 epochs)...
+[INFO] 2026-04-26 06:13:49,591 run: Running torch.distributed.run with args: ['/home/c_1006/miniconda3/envs/deepgate2/lib/python3.8/site-packages/torch/distributed/run.py', '--nproc_per_node=1', './main.py', 'prob', '--exp_id', 'PA2_assignment1/dim128', '--data_dir', '../data/train', '--dim_hidden', '128', '--reg_loss', 'l1', '--cls_loss', 'bce', '--arch', 'mlpgnn', '--Prob_weight', '3', '--RC_weight', '1', '--Func_weight', '2', '--num_rounds', '1', '--gpus', '0', '--batch_size', '32', '--num_workers', '4', '--num_epochs', '10', '--no_rc']
+[INFO] 2026-04-26 06:13:49,592 run: Using nproc_per_node=1.
+[INFO] 2026-04-26 06:13:49,592 api: Starting elastic_operator with launch configs:
+  entrypoint       : ./main.py
+  min_nodes        : 1
+  max_nodes        : 1
+  nproc_per_node   : 1
+  run_id           : none
+  rdzv_backend     : static
+  rdzv_endpoint    : 127.0.0.1:29500
+  rdzv_configs     : {'rank': 0, 'timeout': 900}
+  max_restarts     : 3
+  monitor_interval : 5
+  log_dir          : None
+  metrics_cfg      : {}
+
+[INFO] 2026-04-26 06:13:49,593 local_elastic_agent: log directory set to: /tmp/torchelastic_exi1hzpw/none_pjsm134i
+[INFO] 2026-04-26 06:13:49,593 api: [default] starting workers for entrypoint: python3
+[INFO] 2026-04-26 06:13:49,593 api: [default] Rendezvous'ing worker group
+[INFO] 2026-04-26 06:13:49,593 static_tcp_rendezvous: Creating TCPStore as the c10d::Store implementation
+/home/c_1006/miniconda3/envs/deepgate2/lib/python3.8/site-packages/torch/distributed/elastic/utils/store.py:52: FutureWarning: This is an experimental API and will be changed in future.
+  warnings.warn(
+[INFO] 2026-04-26 06:13:49,593 api: [default] Rendezvous complete for workers. Result:
+  restart_count=0
+  master_addr=127.0.0.1
+  master_port=29500
+  group_rank=0
+  group_world_size=1
+  local_ranks=[0]
+  role_ranks=[0]
+  global_ranks=[0]
+  role_world_sizes=[1]
+  global_world_sizes=[1]
+
+[INFO] 2026-04-26 06:13:49,593 api: [default] Starting worker group
+[INFO] 2026-04-26 06:13:49,593 __init__: Setting worker0 reply file to: /tmp/torchelastic_exi1hzpw/none_pjsm134i/attempt_0/0/error.json
+The output will be saved to  /home/c_1006/DeepGate2/src/../exp/prob/PA2_assignment1/dim128
+Setting random seed for reproductivity..
+==> Using settings Namespace(Func_weight=2.0, Prob_weight=3.0, RC_weight=1.0, Trans_weight=0, activation_layer='relu', aggr_function='tfmlp', aggr_state=False, arch='mlpgnn', batch_size=32, circuit_file='graphs.npz', cls_loss='bce', cop_only=False, custom_backward=False, data_dir='../data/train', debug=0, debug_dir='/home/c_1006/DeepGate2/src/../exp/prob/PA2_assignment1/dim128/debug', diff_multiplier=10, dim_edge_feature=16, dim_hidden=128, dim_mlp=32, dim_node_feature=3, dim_pred=1, disable_encode=False, enable_aig=True, eplison=0.4, exp_depth=3, exp_dir='/home/c_1006/DeepGate2/src/../exp/prob', exp_id='PA2_assignment1/dim128', gate_to_index={'PI': 0, 'AND': 1, 'NOT': 2}, gate_types='*', gpus=[0], gpus_str='0', grad_clip=0.0, hide_data_time=False, homo_pi_init=False, init_hidden=False, intermediate_supervision=False, k_step=10.0, label_file='labels.npz', load_model='', local_rank=0, logic_diff_embedding='positional', logic_implication=False, lr=0.0001, lr_step=[30, 45], mask=False, master_batch_size=-1, max_n=10, metric='loss', min_n=3, mul_mlp=False, n_pairs=10000, no_func=False, no_keep_input=False, no_node_cop=False, no_rc=True, no_reverse=False, no_trans=False, node_reconv=False, norm_layer='batchnorm', not_cuda_benchmark=False, num_aggr=3, num_epochs=10, num_fc=3, num_gate_types=3, num_iters=-1, num_rounds=1, num_workers=4, p_geo=0.4, p_k_2=0.3, predict_diff=False, pretrained_path='../exp/pretrained/pretrain_l1/model_last.pth', print_iter=0, prob_loss=False, prob_weight=0.1, random_seed=208, reconv_skip_connection=False, reg_loss='l1', reload_dataset=False, resume=False, reverse=True, root_dir='/home/c_1006/DeepGate2/src/..', sat_loss='smoothstep', save_all=False, save_dir='/home/c_1006/DeepGate2/src/../exp/prob/PA2_assignment1/dim128', save_intervals=5, seperate_hidden=False, small_train=False, spc_exp_id='', task='prob', temperature=0.01, test_data_dir=None, test_split='test', trainval_split=0.9, un_directed=False, update_function='gru', use_aig=False, use_edge_attr=False, use_logic_diff=False, val_only=False, weight_decay=1e-10, wx_mlp=False, wx_update=False)
+Training in single device:  cuda:0
+==> Loading dataset from:  ../data/train
+Size:  9757
+Splitting the dataset into training and validation sets..
+# training circuits:  8781
+# validation circuits:  976
+==> Creating model...
+MLPGate(
+  (aggr_and_strc): TFMLP(
+    (attn_lin): Linear(in_features=256, out_features=1, bias=True)
+    (msg_q): Linear(in_features=128, out_features=128, bias=True)
+    (msg_k): Linear(in_features=128, out_features=128, bias=True)
+    (msg_v): Linear(in_features=128, out_features=128, bias=True)
+  )
+  (aggr_and_func): TFMLP(
+    (attn_lin): Linear(in_features=256, out_features=1, bias=True)
+    (msg_q): Linear(in_features=256, out_features=128, bias=True)
+    (msg_k): Linear(in_features=256, out_features=128, bias=True)
+    (msg_v): Linear(in_features=256, out_features=128, bias=True)
+  )
+  (aggr_not_strc): TFMLP(
+    (attn_lin): Linear(in_features=256, out_features=1, bias=True)
+    (msg_q): Linear(in_features=128, out_features=128, bias=True)
+    (msg_k): Linear(in_features=128, out_features=128, bias=True)
+    (msg_v): Linear(in_features=128, out_features=128, bias=True)
+  )
+  (aggr_not_func): TFMLP(
+    (attn_lin): Linear(in_features=256, out_features=1, bias=True)
+    (msg_q): Linear(in_features=128, out_features=128, bias=True)
+    (msg_k): Linear(in_features=128, out_features=128, bias=True)
+    (msg_v): Linear(in_features=128, out_features=128, bias=True)
+  )
+  (update_and_strc): GRU(128, 128)
+  (update_and_func): GRU(128, 128)
+  (update_not_strc): GRU(128, 128)
+  (update_not_func): GRU(128, 128)
+  (readout_prob): MLP(
+    (fc): Sequential(
+      (0): Linear(in_features=128, out_features=32, bias=True)
+      (1): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ReLU(inplace=True)
+      (3): Dropout(p=0.2, inplace=False)
+      (4): Linear(in_features=32, out_features=32, bias=True)
+      (5): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (6): ReLU(inplace=True)
+      (7): Dropout(p=0.2, inplace=False)
+      (8): Linear(in_features=32, out_features=1, bias=True)
+    )
+  )
+  (readout_trans): MLP(
+    (fc): Sequential(
+      (0): Linear(in_features=128, out_features=32, bias=True)
+      (1): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ReLU(inplace=True)
+      (3): Dropout(p=0.2, inplace=False)
+      (4): Linear(in_features=32, out_features=32, bias=True)
+      (5): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (6): ReLU(inplace=True)
+      (7): Dropout(p=0.2, inplace=False)
+      (8): Linear(in_features=32, out_features=1, bias=True)
+      (9): Sigmoid()
+    )
+  )
+  (readout_rc): MLP(
+    (fc): Sequential(
+      (0): Linear(in_features=256, out_features=32, bias=True)
+      (1): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): Dropout(p=0.2, inplace=False)
+      (3): Linear(in_features=32, out_features=32, bias=True)
+      (4): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (5): Dropout(p=0.2, inplace=False)
+      (6): Linear(in_features=32, out_features=1, bias=True)
+      (7): Sigmoid()
+    )
+  )
+  (hf_emd_int): Linear(in_features=1, out_features=128, bias=True)
+)
+==> Starting training...
+[W pthreadpool-cpp.cc:90] Warning: Leaking Caffe2 thread-pool after fork. (function pthreadpool)
+[W pthreadpool-cpp.cc:90] Warning: Leaking Caffe2 thread-pool after fork. (function pthreadpool)
+[W pthreadpool-cpp.cc:90] Warning: Leaking Caffe2 thread-pool after fork. (function pthreadpool)
+[W pthreadpool-cpp.cc:90] Warning: Leaking Caffe2 thread-pool after fork. (function pthreadpool)
+[INFO] 2026-04-26 07:20:48,403 api: [default] worker group successfully finished. Waiting 300 seconds for other agents to finish.
+[INFO] 2026-04-26 07:20:48,403 api: Local worker group finished (SUCCEEDED). Waiting 300 seconds for other agents to finish
+/home/c_1006/miniconda3/envs/deepgate2/lib/python3.8/site-packages/torch/distributed/elastic/utils/store.py:70: FutureWarning: This is an experimental API and will be changed in future.
+  warnings.warn(
+[INFO] 2026-04-26 07:20:48,403 api: Done waiting for other agents. Elapsed: 0.00027298927307128906 seconds
+{"name": "torchelastic.worker.status.SUCCEEDED", "source": "WORKER", "timestamp": 0, "metadata": {"run_id": "none", "global_rank": 0, "group_rank": 0, "worker_id": "1454045", "role": "default", "hostname": "alda", "state": "SUCCEEDED", "total_run_time": 4018, "rdzv_backend": "static", "raw_error": null, "metadata": "{\"group_world_size\": 1, \"entry_point\": \"python3\", \"local_rank\": [0], \"role_rank\": [0], \"role_world_size\": [1]}", "agent_restarts": 0}}
+{"name": "torchelastic.worker.status.SUCCEEDED", "source": "AGENT", "timestamp": 0, "metadata": {"run_id": "none", "global_rank": null, "group_rank": 0, "worker_id": null, "role": "default", "hostname": "alda", "state": "SUCCEEDED", "total_run_time": 4018, "rdzv_backend": "static", "raw_error": null, "metadata": "{\"group_world_size\": 1, \"entry_point\": \"python3\"}", "agent_restarts": 0}}
+  [Train] Complete for dim128
+======================================================================
+  SUMMARY  dim_hidden = 128
+  Source log : /home/c_1006/DeepGate2/exp/prob/PA2_assignment1/dim128/logs_2026-04-26-06-13/log.txt
+  Generated  : 公曆 20廿六年 四月 廿六日 週日 七時廿分48秒
+======================================================================
+
+  Per-epoch validation metrics:
+  Epoch | Val LProb (Signal Prob Loss ↓) | Val ACC (TT Dist ACC ↑)
+  ------|--------------------------------|------------------------
+      1 |                       0.060308 | 0.782258
+      2 |                       0.049645 | 0.810000
+      3 |                       0.038586 | 0.809677
+      4 |                       0.037925 | 0.837097
+      5 |                       0.027839 | 0.853871
+      6 |                       0.026890 | 0.854194
+      7 |                       0.027924 | 0.873226
+      8 |                       0.029710 | 0.907742
+      9 |                       0.027055 | 0.908387
+     10 |                       0.023696 | 0.911935
+
+  === Best / Final Results ===
+  Final epoch                       : 10
+  Val LProb (Signal Prob Val Loss)  : 0.023696
+  Val ACC (TT Dist ACC) - final     : 0.911935
+  Val ACC (TT Dist ACC) - best      : 0.911935
+
+
+======================================================================
+  CROSS-DIM COMPARISON
+  公曆 20廿六年 四月 廿六日 週日 七時廿分48秒
+======================================================================
+dim_hidden | Val LProb (Signal Prob ↓) | TT Dist Val ACC final (↑) | TT Dist Val ACC best (↑)
+-----------|---------------------------|---------------------------|-------------------------
+        32 |                  0.035522 |                  0.867097 | 0.867097
+        64 |                  0.024337 |                  0.910968 | 0.910968
+       128 |                  0.023696 |                  0.911935 | 0.911935
+
+Interpretation:
+  - no_tt_loss   vs baseline : ACC and LFunc should WORSEN (TT loss removed)
+  - homo_pi_init vs baseline : ACC and LProb should WORSEN (PI initialized homogeneously)
+
+Results saved to: /home/c_1006/LSV/PA_2/10_epochs/results/assignment1/
+  dim{N}_train.log    — full training stdout per dim
+  dim{N}_summary.txt  — epoch-by-epoch metrics per dim
+  comparison.txt      — cross-dim comparison table
