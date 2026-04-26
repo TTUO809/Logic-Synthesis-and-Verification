@@ -1,0 +1,14 @@
+experiment   | Val LProb (↓) | Val LRC (↓) | Val LFunc (↓) | Val LTrans (↓) | Val ACC (↑)
+-------------|---------------|-------------|---------------|----------------|------------
+prob_only    |      0.051210 |    0.338238 |      0.143175 |       0.460010 | 0.813226
+with_trans   |      0.054054 |    0.338235 |      0.150468 |       0.051691 | 0.803548
+
+Eval summaries (model L1 vs analytic 2p(1-p) baseline) are in:
+  /home/c_1006/LSV/PA_2/results/assignment3/prob_only_eval.log
+  /home/c_1006/LSV/PA_2/results/assignment3/with_trans_eval.log
+
+Interpretation:
+  - with_trans should improve LTrans materially over prob_only (which has Trans_weight=0).
+  - In test_trans.py output, a positive 'Gap (analytic - model)' means the GNN learned
+    structure beyond the closed-form 2p(1-p) baseline.
+  - PI nodes have trans_prob ≈ flip_prob = 0.1 by construction; expect small L1 there.

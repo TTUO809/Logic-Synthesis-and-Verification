@@ -1,0 +1,719 @@
+diff --git a/.gitignore b/.gitignore
+index 5d98891..2ad5e21 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1,6 +1,8 @@
+ emb/*
+ exp/*
+ .vscode
++dataset/rawaig/*
++*.npz
+ 
+ *__pycache__
+ *.pyc
+diff --git a/requirements.txt b/requirements.txt
+index 515780b..4365981 100644
+--- a/requirements.txt
++++ b/requirements.txt
+@@ -4,14 +4,14 @@ pytorch-transformers==1.2.0
+ scikit-learn==1.0.2
+ scipy==1.8.0
+ seaborn==0.12.2
+-torch==1.9.1
+-torch-cluster==1.5.9
++# torch==1.9.1
++# torch-cluster==1.5.9
+ torch-geometric==2.0.2
+-torch-scatter==2.0.8
+-torch-sparse==0.6.12
+-torch-spline-conv==1.2.1
++# torch-scatter==2.0.8
++# torch-sparse==0.6.12
++# torch-spline-conv==1.2.1
+ torch-tb-profiler==0.4.0
+ torchsummary==1.5.1
+-torchvision==0.10.0
++# torchvision==0.10.0
+ tqdm==4.32.1
+ xlrd==2.0.1
+diff --git a/src/config.py b/src/config.py
+index 38f5d3a..a1205c1 100644
+--- a/src/config.py
++++ b/src/config.py
+@@ -53,6 +53,14 @@ def get_parse_args():
+ 
+     # dataset settings
+     parser.add_argument('--no_rc', default=False, action='store_true')
++    parser.add_argument('--no_func', default=False, action='store_true',
++                             help='Disable pairwise TT difference loss (PA2 ablation)')
++    parser.add_argument('--no_trans', default=False, action='store_true',
++                             help='Disable transition-probability loss (PA3 ablation)')
++    parser.add_argument('--homo_pi_init', default=False, action='store_true',
++                             help='Use homogeneous PI init instead of orthogonal (PA2 ablation)')
++    parser.add_argument('--label_file', default='labels.npz', type=str,
++                             help='Filename of labels npz under --data_dir (PA3: e.g. labels_markov.npz)')
+     parser.add_argument('--data_dir', default='../data/random_circuits',
+                              type=str, help='the path to the dataset')
+     parser.add_argument('--enable_aig', default=True, action='store_true')      # default enable aig, no support MIG now 
+@@ -175,6 +183,8 @@ def get_parse_args():
+     parser.add_argument('--Prob_weight', type=float, default=5)
+     parser.add_argument('--RC_weight', type=float, default=3)
+     parser.add_argument('--Func_weight', type=float, default=1)
++    parser.add_argument('--Trans_weight', type=float, default=0,
++                             help='PA3: weight for transition-probability (switching activity) loss')
+ 
+ 
+     # train and val
+@@ -232,7 +242,7 @@ def get_parse_args():
+         assert args.un_directed, 'When using convgnn, the graph should be undirected.'
+     
+     args.circuit_file = "graphs.npz"
+-    args.label_file = "labels.npz"
++    # PA3: --label_file is now a CLI arg (default 'labels.npz'); do not overwrite here.
+ 
+     if args.use_logic_diff:
+         assert args.logic_diff_embedding == "positional", "Only support positional embedding for the logic difference." 
+diff --git a/src/datasets/load_data.py b/src/datasets/load_data.py
+index 9a57283..73190e8 100644
+--- a/src/datasets/load_data.py
++++ b/src/datasets/load_data.py
+@@ -286,7 +286,7 @@ def aig_parse_pyg(iclauses, n_vars, n_clauses, prob_loss):
+     return graph
+ 
+ def parse_pyg_mlpgate(x, edge_index, tt_dis, min_tt_dis, tt_pair_index, y, rc_pair_index, is_rc, \
+-    use_edge_attr=False, reconv_skip_connection=False, no_node_cop=False, node_reconv=False, un_directed=False, num_gate_types=9, dim_edge_feature=32, logic_implication=False, mask=False):
++    use_edge_attr=False, reconv_skip_connection=False, no_node_cop=False, node_reconv=False, un_directed=False, num_gate_types=9, dim_edge_feature=32, logic_implication=False, mask=False, trans_y=None):
+     x_torch = construct_node_feature(x, no_node_cop, node_reconv, num_gate_types)
+ 
+     tt_pair_index = torch.tensor(tt_pair_index, dtype=torch.long)
+@@ -322,6 +322,12 @@ def parse_pyg_mlpgate(x, edge_index, tt_dis, min_tt_dis, tt_pair_index, y, rc_pa
+     # add indices for gate types
+     graph.gate = torch.tensor(x[:, 1:2], dtype=torch.float)
+     graph.prob = torch.tensor(y).reshape((len(x), 1))
++    if trans_y is None:
++        # PA2-3: fall back to analytic 2*p*(1-p) so legacy datasets without trans_prob
++        # labels still have a sane (non-NaN) target tensor on the graph.
++        graph.trans_prob = (2.0 * graph.prob * (1.0 - graph.prob)).float()
++    else:
++        graph.trans_prob = torch.tensor(trans_y).reshape((len(x), 1)).float()
+ 
+     if un_directed:
+         graph = ToUndirected()(graph)
+diff --git a/src/datasets/mlpgate_dataset.py b/src/datasets/mlpgate_dataset.py
+index e2854b5..3f1bba3 100644
+--- a/src/datasets/mlpgate_dataset.py
++++ b/src/datasets/mlpgate_dataset.py
+@@ -60,6 +60,10 @@ class MLPGateDataset(InMemoryDataset):
+             name = 'inmemory'
+         if self.args.no_rc:
+             name += '_norc'
++        # PA2-3: distinct cache per label file so Markov labels don't collide with i.i.d.
++        label_stem = osp.splitext(osp.basename(self.args.label_file))[0]
++        if label_stem != 'labels':
++            name += '_' + label_stem
+         return osp.join(self.root, name)
+ 
+     @property
+@@ -91,6 +95,8 @@ class MLPGateDataset(InMemoryDataset):
+             min_tt_dis = labels[cir_name]['min_tt_dis']
+             tt_pair_index = labels[cir_name]['tt_pair_index']
+             prob = labels[cir_name]['prob']
++            # PA2-3: optional transition-probability label (legacy labels.npz lacks this key)
++            trans_prob = labels[cir_name]['trans_prob'] if 'trans_prob' in labels[cir_name] else None
+ 
+             if self.args.no_rc:
+                 rc_pair_index = [[0, 1]]
+@@ -111,7 +117,8 @@ class MLPGateDataset(InMemoryDataset):
+                 x, edge_index, tt_dis, min_tt_dis, tt_pair_index, prob, rc_pair_index, is_rc, 
+                 self.args.use_edge_attr, self.args.reconv_skip_connection, self.args.no_node_cop,
+                 self.args.node_reconv, self.args.un_directed, self.args.num_gate_types,
+-                self.args.dim_edge_feature, self.args.logic_implication, self.args.mask
++                self.args.dim_edge_feature, self.args.logic_implication, self.args.mask,
++                trans_y=trans_prob,
+             )
+             graph.name = cir_name
+             data_list.append(graph)
+diff --git a/src/get_emb_aig.py b/src/get_emb_aig.py
+index 57dcc95..1b720a1 100644
+--- a/src/get_emb_aig.py
++++ b/src/get_emb_aig.py
+@@ -84,7 +84,11 @@ def test(args):
+         start_time = time.time()
+         res = detector.run(g)
+         end_time = time.time()
+-        hs, hf, prob, is_rc = res['results']
++        _r = res['results']
++        if len(_r) == 5:
++            hs, hf, prob, _trans, is_rc = _r
++        else:
++            hs, hf, prob, is_rc = _r
+         print("Circuit: {}, Size: {:}, Time: {:.2f}".format(aig_name, len(x_data), end_time-start_time))
+         # acc = get_function_acc(g, hf)
+         # print("ACC: {:.2f}%".format(acc/100))
+diff --git a/src/get_emb_bench.py b/src/get_emb_bench.py
+index ad2eb06..fccf259 100644
+--- a/src/get_emb_bench.py
++++ b/src/get_emb_bench.py
+@@ -78,7 +78,11 @@ def get_emb(exp_id, bench_filepath, emb_filepath, arch='mlpgnn', aggr='tfmlp', d
+     start_time = time.time()
+     res = detector.run(g)
+     end_time = time.time()
+-    hs, hf, prob, is_rc = res['results']
++    _r = res['results']
++    if len(_r) == 5:
++        hs, hf, prob, _trans, is_rc = _r
++    else:
++        hs, hf, prob, is_rc = _r
+     if display:
+         print("Circuit: {}, Size: {:}, Time: {:.2f} s".format(bench_name, len(x_data), end_time-start_time))
+         print()
+@@ -113,7 +117,11 @@ def test(args):
+         start_time = time.time()
+         res = detector.run(g)
+         end_time = time.time()
+-        hs, hf, prob, is_rc = res['results']
++        _r = res['results']
++        if len(_r) == 5:
++            hs, hf, prob, _trans, is_rc = _r
++        else:
++            hs, hf, prob, is_rc = _r
+         print("Circuit: {}, Size: {:}, Time: {:.2f} s".format(bench_name, len(x_data), end_time-start_time))
+         print()
+ 
+diff --git a/src/main.py b/src/main.py
+index 1d85383..8e97173 100644
+--- a/src/main.py
++++ b/src/main.py
+@@ -17,7 +17,7 @@ from trains.train_factory import train_factory
+ from datasets.mig_dataset import MIGDataset
+ from datasets.mlpgate_dataset import MLPGateDataset
+ 
+-os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
++os.environ['CUDA_LAUNCH_BLOCKING'] = '0'
+ 
+ def main(args):
+     print('==> Using settings {}'.format(args))
+@@ -87,10 +87,13 @@ def main(args):
+         num_replicas=args.world_size,
+         rank=args.rank
+     )
++    _persistent = args.num_workers > 0
+     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=False, drop_last=False,
+-                              num_workers=args.num_workers, sampler=train_sampler)
+-    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers,
+-                            sampler=val_sampler)
++                              num_workers=args.num_workers, sampler=train_sampler,
++                              pin_memory=True, persistent_workers=_persistent)
++    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False,
++                            num_workers=args.num_workers, sampler=val_sampler,
++                            pin_memory=True, persistent_workers=_persistent)
+ 
+     #################
+     # Model
+diff --git a/src/models/mlpgate.py b/src/models/mlpgate.py
+index 87aa11c..8485df4 100644
+--- a/src/models/mlpgate.py
++++ b/src/models/mlpgate.py
+@@ -81,6 +81,8 @@ class MLPGate(nn.Module):
+ 
+         # Readout 
+         self.readout_prob = MLP(self.dim_hidden, args.dim_mlp, 1, num_layer=3, p_drop=0.2, norm_layer='batchnorm', act_layer='relu')
++        # PA2-3: switching-activity (transition probability) head; sigmoid since target ∈ [0,1]
++        self.readout_trans = MLP(self.dim_hidden, args.dim_mlp, 1, num_layer=3, p_drop=0.2, norm_layer='batchnorm', act_layer='relu', sigmoid=True)
+         self.readout_rc = MLP(self.dim_hidden * 2, args.dim_mlp, 1, num_layer=3, p_drop=0.2, norm_layer='batchnorm', sigmoid=True)
+ 
+         # consider the embedding for the LSTM/GRU model initialized by non-zeros
+@@ -101,7 +103,9 @@ class MLPGate(nn.Module):
+             hs_init = hs_init.to(self.device)
+         else:
+             hs_init = torch.zeros(num_nodes, self.dim_hidden)
+-            hs_init, max_sim = generate_hs_init(G, hs_init, self.dim_hidden)
++            # 意義：生成初始的 pi 向量，並計算它們之間的最大相似度（如果不是同質初始化）
++            hs_init, max_sim = generate_hs_init(G, hs_init, self.dim_hidden,
++                                                homo_pi_init=getattr(self.args, 'homo_pi_init', False))
+             hs_init = hs_init.to(self.device)
+         
+         # initialize the function hidden state
+@@ -171,10 +175,11 @@ class MLPGate(nn.Module):
+ 
+         # Readout
+         prob = self.readout_prob(hf)
++        trans = self.readout_trans(hf)
+         rc_emb = torch.cat([hs[G.rc_pair_index[0]], hs[G.rc_pair_index[1]]], dim=1)
+         is_rc = self.readout_rc(rc_emb)
+ 
+-        return hs, hf, prob, is_rc
++        return hs, hf, prob, trans, is_rc
+ 
+     
+     def imply_mask(self, G, h, h_true, h_false):
+diff --git a/src/prepare_dataset.py b/src/prepare_dataset.py
+index 5e58592..b4dd76a 100644
+--- a/src/prepare_dataset.py
++++ b/src/prepare_dataset.py
+@@ -36,6 +36,13 @@ def get_parse_args():
+     parser.add_argument('--start_idx', default=0, type=int)
+     parser.add_argument('--end_idx', default=10000, type=int)
+     parser.add_argument('--aig_folder', default='./dataset/rawaig')
++    # PA2-3: Markov stimulus + transition-probability labels
++    parser.add_argument('--markov', action='store_true',
++                        help='Use Markov stimulus (each PI flips with --flip_prob each cycle)')
++    parser.add_argument('--flip_prob', type=float, default=0.1,
++                        help='Per-PI flip probability per cycle for --markov stimulus')
++    parser.add_argument('--label_out', default='labels.npz',
++                        help='Output filename (under data/<exp_id>/) for the labels file')
+ 
+     args = parser.parse_args()
+     return args
+@@ -119,15 +126,30 @@ if __name__ == '__main__':
+         # PI
+         PI_index = level_list[0]
+ 
+-        # Simulation 
++        # Simulation
+         start_time = time.time()
+-        if len(PI_index) < 13:
++        if args.markov:
++            # PA2-3: Markov stimulus always uses NO_PATTERNS (ordered) so transition rates are well-defined.
++            tt = circuit_utils.simulator_truth_table_markov(
++                x_data, PI_index, level_list, fanin_list, gate_to_index,
++                num_patterns=NO_PATTERNS, flip_prob=args.flip_prob,
++            )
++        elif len(PI_index) < 13:
++            # For small PI size, we can exhaustively enumerate the truth table.
+             tt = circuit_utils.simulator_truth_table(x_data, PI_index, level_list, fanin_list, gate_to_index)
+         else:
++            # For larger PI size, we use random simulation to estimate the truth table probabilities.
+             tt = circuit_utils.simulator_truth_table_random(x_data, PI_index, level_list, fanin_list, gate_to_index, NO_PATTERNS)
+-        y = [0] * len(x_data)
++
++        y = [0] * len(x_data)           # Probability of being 1 for each node, estimated from the truth table simulation
++        trans_y = [0.0] * len(x_data)   # Transition probability (flipping) for each node, estimated from the Markov stimulus simulation
+         for idx in range(len(x_data)):
+-            y[idx] = np.sum(tt[idx]) / len(tt[idx])
++            arr = np.asarray(tt[idx], dtype=np.int8)    # Convert to numpy array for easier processing
++            y[idx] = float(arr.sum()) / len(arr)        # Probability of being 1: count how many times the value is 1, divided by the number of patterns
++            if len(arr) > 1:    # Transition probability: count how many times the value changes (from 0 to 1 or from 1 to 0) across the patterns, divided by the number of transitions (which is len(arr) - 1)
++                trans_y[idx] = float(np.mean(arr[1:] != arr[:-1]))
++            else:   # If there's only one pattern, we can't really define a transition probability, so we set it to 0.0 (or we could choose to ignore it in the loss)
++                trans_y[idx] = 0.0
+ 
+         # Pair
+         tt_pair_index, tt_dis, min_tt_dis = gen_tt_pair(x_data, fanin_list, fanout_list, level_list, y)
+@@ -139,6 +161,7 @@ if __name__ == '__main__':
+         labels[circuit_name] = {
+             'tt_pair_index': np.array(tt_pair_index), 'tt_dis': np.array(tt_dis).astype('float32'), 
+             'prob': np.array(y).astype('float32'), 
++            'trans_prob': np.array(trans_y).astype('float32'), 
+             'min_tt_dis': np.array(min_tt_dis).astype('float32'), 
+         }
+         tot_nodes += len(x_data)
+@@ -155,7 +178,7 @@ if __name__ == '__main__':
+         cir_idx += 1
+ 
+     output_filename_circuit = os.path.join(output_folder, 'graphs.npz')
+-    output_filename_labels = os.path.join(output_folder, 'labels.npz')
++    output_filename_labels = os.path.join(output_folder, args.label_out)
+     print('# Graphs: {:}, # Nodes: {:}'.format(len(graphs), tot_nodes))
+     print('Total pairs: ', tot_pairs)
+     np.savez_compressed(output_filename_circuit, circuits=graphs)
+diff --git a/src/test_acc_bin.py b/src/test_acc_bin.py
+index fd3187d..8e9a4d0 100644
+--- a/src/test_acc_bin.py
++++ b/src/test_acc_bin.py
+@@ -45,7 +45,12 @@ def test(args):
+         if len(NAME_LIST) > 0 and g.name not in NAME_LIST:
+             continue
+         res = detector.run(g)
+-        hs, hf, prob, is_rc = res['results']
++        # PA3: model now returns 5-tuple (hs, hf, prob, trans, is_rc); keep 4-tuple compat.
++        _r = res['results']
++        if len(_r) == 5:
++            hs, hf, prob, _trans, is_rc = _r
++        else:
++            hs, hf, prob, is_rc = _r
+         node_emb = hf
+         tp = 0
+         tn = 0
+diff --git a/src/test_trans.py b/src/test_trans.py
+new file mode 100644
+index 0000000..7505e73
+--- /dev/null
++++ b/src/test_trans.py
+@@ -0,0 +1,177 @@
++"""PA2-3 evaluation: per-node transition (switching) probability prediction.
++
++Loads a trained checkpoint and reports, on the full dataset:
++  - L1 of the model's transition prediction vs the simulator-derived target.
++  - L1 of the analytic baseline 2*p*(1-p) (with p = predicted signal prob)
++    vs the same target. This baseline is exact under i.i.d. uniform stimulus
++    but biased under Markov stimulus, so the gap quantifies what the GNN
++    learns beyond the closed form.
++  - Per-gate-type breakdown (PI=0, AND=1, NOT=2) of L1 errors.
++
++Deliberately avoids detector_factory / base_detector to keep cv2 out.
++"""
++from __future__ import absolute_import
++from __future__ import division
++from __future__ import print_function
++
++import os
++import sys
++import torch
++import numpy as np
++
++from config import get_parse_args
++from datasets.mlpgate_dataset import MLPGateDataset
++from models.model import create_model, load_model
++
++# Map integer gate-type codes to human-readable names for display
++GATE_NAME = {0: 'PI', 1: 'AND', 2: 'NOT'}
++
++
++def evaluate(args):
++    # Force batch size 1 and disable multiprocessing workers because the eval
++    # loop processes one circuit at a time and the per-gate-type breakdown must
++    # keep circuits separate rather than batching them together.
++    args.batch_size = 1
++    args.num_workers = 0
++
++    # MLPGateDataset loads all circuits from data_dir into memory as a list,
++    # so we iterate over it directly without a DataLoader.
++    dataset = MLPGateDataset(args.data_dir, args)
++
++    # Build the model architecture and restore weights from the saved checkpoint.
++    # The model must have been trained with --Trans_weight > 0 to include a
++    # transition readout head; otherwise trans_pred will be None and only the
++    # analytic baseline will be reported.
++    model = create_model(args)
++    device_str = 'cuda' if args.gpus[0] >= 0 else 'cpu'
++    model = load_model(model, args.load_model, device=device_str)
++    model = model.to(args.device)
++    model.eval()
++
++    # Accumulators for per-node absolute errors across all circuits:
++    #   abs_err_model    – errors from the GNN transition head
++    #   abs_err_analytic – errors from the closed-form baseline 2*p*(1-p)
++    #   abs_err_prob     – errors of the raw signal-probability prediction
++    #   per_type_err_model – model errors split by gate type (PI / AND / NOT)
++    abs_err_model = []
++    abs_err_analytic = []
++    abs_err_prob = []
++    per_type_err_model = {0: [], 1: [], 2: []}
++
++    n_circuits = 0
++    with torch.no_grad():
++        for g in dataset:
++            n_circuits += 1
++            g = g.to(args.device)
++
++            # Forward pass; preds is a tuple whose length depends on whether
++            # the model was trained with a transition head.
++            preds, _max_sim = model(g)
++
++            # Unpack predictions: (hs, hf, prob, trans, is_rc) for new models
++            # or (hs, hf, prob, is_rc) for legacy checkpoints without trans head.
++            if len(preds) == 5:
++                _hs, _hf, prob_pred, trans_pred, _is_rc = preds
++            else:
++                # Legacy 4-tuple: transition head was not trained
++                _hs, _hf, prob_pred, _is_rc = preds
++                trans_pred = None
++
++            # Move tensors to CPU numpy arrays; squeeze removes the batch dim.
++            prob_pred_np  = prob_pred.detach().cpu().squeeze().numpy()
++            prob_target   = g.prob.detach().cpu().squeeze().numpy()
++            trans_target  = g.trans_prob.detach().cpu().squeeze().numpy()
++            gate          = g.gate.detach().cpu().squeeze().numpy().astype(int)
++
++            # Clip predicted probabilities to [0, 1] before computing errors.
++            prob_pred_c = np.clip(prob_pred_np, 0.0, 1.0)
++
++            # L1 error for signal-probability prediction
++            e_prob      = np.abs(prob_pred_c - prob_target)
++
++            # Analytic baseline: under i.i.d. uniform stimulus the switching
++            # probability equals 2*p*(1-p).  Any model improvement over this
++            # baseline indicates the GNN captures temporal/structural correlations.
++            e_analytic  = np.abs(2.0 * prob_pred_c * (1.0 - prob_pred_c) - trans_target)
++
++            abs_err_prob.append(e_prob)
++            abs_err_analytic.append(e_analytic)
++
++            # Compute model transition errors only when the head is present.
++            if trans_pred is not None:
++                trans_pred_np = np.clip(trans_pred.detach().cpu().squeeze().numpy(), 0.0, 1.0)
++                e_model = np.abs(trans_pred_np - trans_target)
++                abs_err_model.append(e_model)
++
++                # Collect errors for each gate type to enable the per-type breakdown.
++                for gt in (0, 1, 2):
++                    mask = (gate == gt)
++                    if mask.any():
++                        per_type_err_model[gt].append(e_model[mask])
++
++    # Concatenate per-circuit error arrays into flat arrays over all nodes.
++    all_prob     = np.concatenate(abs_err_prob)
++    all_analytic = np.concatenate(abs_err_analytic)
++
++    # Print summary header
++    print('======================================================================')
++    print('  P2-3 SWITCHING-PROBABILITY EVALUATION')
++    print('  Checkpoint    : {}'.format(args.load_model))
++    print('  Data dir      : {}'.format(args.data_dir))
++    print('  Label file    : {}'.format(args.label_file))
++    print('  Circuits used : {}'.format(n_circuits))
++    print('  Total nodes   : {}'.format(len(all_prob)))
++    print('======================================================================')
++
++    # Report signal-probability and analytic-baseline errors
++    print('  L1(prob_pred, prob_target)        = {:.6f}'.format(all_prob.mean()))
++    print('  L1(2p(1-p)_pred, trans_target)    = {:.6f}   <-- analytic baseline'.format(all_analytic.mean()))
++
++    if abs_err_model:
++        # Report model transition errors and how much they improve over the baseline
++        all_model = np.concatenate(abs_err_model)
++        gap = all_analytic.mean() - all_model.mean()
++        print('  L1(trans_pred, trans_target)      = {:.6f}   <-- model'.format(all_model.mean()))
++        print('  Gap (analytic - model)            = {:+.6f}   '
++              '({})'.format(gap, '+ model beats baseline' if gap > 0 else '- model worse than baseline'))
++        print('')
++
++        # Per-gate-type breakdown so we can see which gate types drive the error
++        print('  Per-gate-type L1 (model):')
++        print('    type  |   N nodes  |   L1 trans')
++        print('    ------|------------|-----------')
++        for gt in (0, 1, 2):
++            if per_type_err_model[gt]:
++                arr = np.concatenate(per_type_err_model[gt])
++                print('    {:5s} | {:10d} | {:.6f}'.format(GATE_NAME[gt], arr.size, arr.mean()))
++            else:
++                # Gate type absent in this dataset split
++                print('    {:5s} | {:>10s} | {:>9s}'.format(GATE_NAME[gt], '0', 'N/A'))
++    else:
++        # The checkpoint has no transition head — only baseline numbers are valid.
++        print('')
++        print('  [WARN] No transition predictions — was the model trained with --Trans_weight > 0?')
++
++
++def main():
++    # Parse command-line arguments defined in config.py
++    args = get_parse_args()
++    args.local_rank = 0
++
++    # Expose only the requested GPUs to PyTorch via the environment variable
++    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus_str
++    args.device = torch.device('cuda:0' if args.gpus[0] >= 0 else 'cpu')
++
++    # Validate required arguments before doing any expensive work
++    if not args.load_model:
++        print('[ERROR] --load_model is required.', file=sys.stderr)
++        sys.exit(1)
++    if not os.path.exists(args.load_model):
++        print('[ERROR] Checkpoint not found: {}'.format(args.load_model), file=sys.stderr)
++        sys.exit(1)
++
++    evaluate(args)
++
++
++if __name__ == '__main__':
++    main()
+diff --git a/src/trains/mlpgnn_trainer.py b/src/trains/mlpgnn_trainer.py
+index 1078a97..7787988 100644
+--- a/src/trains/mlpgnn_trainer.py
++++ b/src/trains/mlpgnn_trainer.py
+@@ -31,9 +31,14 @@ class ModelWithLoss(torch.nn.Module):
+ 
+     def forward(self, batch):
+         preds, max_sim = self.model(batch)
+-        hs, hf, prob, is_rc = preds
++        hs, hf, prob, trans, is_rc = preds
+         # Task 1: Probability Prediction
+         prob_loss = self.reg_loss(prob.to(self.device), batch.prob.to(self.device))
++        # Task 1b (PA2-3): Switching / transition probability prediction
++        if getattr(self.model.args, 'no_trans', False):
++            trans_loss = torch.zeros(1, device=self.device).squeeze()
++        else:
++            trans_loss = self.reg_loss(trans.to(self.device), batch.trans_prob.to(self.device))
+         # Task 2: Structural Prediction
+         # node_a = hs[batch.rc_pair_index[0]]
+         # node_b = hs[batch.rc_pair_index[1]]
+@@ -46,13 +51,18 @@ class ModelWithLoss(torch.nn.Module):
+         rc_loss = self.cls_loss(is_rc.to(self.device), batch.is_rc.to(self.device))
+         # Task 3: Function Prediction
+         # emb = torch.cat([hs, hf], dim=-1)
+-        node_a = hf[batch.tt_pair_index[0]]
+-        node_b = hf[batch.tt_pair_index[1]]
+-        emb_dis = 1 - torch.cosine_similarity(node_a, node_b, eps=1e-8)
+-        emb_dis_z = zero_normalization(emb_dis)
+-        tt_dis_z = zero_normalization(batch.tt_dis)
+-        func_loss = self.reg_loss(emb_dis_z.to(self.device), tt_dis_z.to(self.device))
+-        loss_stats = {'LProb': prob_loss, 'LRC': rc_loss, 'LFunc': func_loss}
++        
++        if getattr(self.model.args, 'no_func', False):
++            # 若不計算功能預測損失，則直接將 func_loss 設為 0，並確保它不會影響總損失的計算
++            func_loss = torch.zeros(1, device=self.device).squeeze()
++        else:
++            node_a = hf[batch.tt_pair_index[0]]
++            node_b = hf[batch.tt_pair_index[1]]
++            emb_dis = 1 - torch.cosine_similarity(node_a, node_b, eps=1e-8)
++            emb_dis_z = zero_normalization(emb_dis)
++            tt_dis_z = zero_normalization(batch.tt_dis)
++            func_loss = self.reg_loss(emb_dis_z.to(self.device), tt_dis_z.to(self.device))
++        loss_stats = {'LProb': prob_loss, 'LRC': rc_loss, 'LFunc': func_loss, 'LTrans': trans_loss}
+ 
+         return hs, hf, loss_stats
+ 
+@@ -111,8 +121,14 @@ class MLPGNNTrainer(object):
+                 batch = batch.to(self.args.device)
+             data_time.update(time.time() - end)
+             hs, hf, loss_stats = model_with_loss(batch)
+-            loss = loss_stats['LProb'] * args.Prob_weight + loss_stats['LRC'] * args.RC_weight + loss_stats['LFunc'] * args.Func_weight
+-            loss /= (args.Prob_weight + args.RC_weight + args.Func_weight)
++            func_w = 0.0 if getattr(args, 'no_func', False) else args.Func_weight
++            trans_w = 0.0 if getattr(args, 'no_trans', False) else getattr(args, 'Trans_weight', 0.0)
++            loss = (loss_stats['LProb'] * args.Prob_weight
++                    + loss_stats['LRC'] * args.RC_weight
++                    + loss_stats['LFunc'] * func_w
++                    + loss_stats['LTrans'] * trans_w)
++            total_w = args.Prob_weight + args.RC_weight + func_w + trans_w
++            loss /= max(total_w, 1.0)
+             loss = loss.mean()
+             loss_stats['loss'] = loss
+             if phase == 'train':
+@@ -169,7 +185,7 @@ class MLPGNNTrainer(object):
+             reg_loss_func = _loss_factory[reg_loss]()
+         if cls_loss in _loss_factory.keys():
+             cls_loss_func = _loss_factory[cls_loss]()
+-        loss_states = ['loss', 'LProb', 'LRC', 'LFunc']
++        loss_states = ['loss', 'LProb', 'LRC', 'LFunc', 'LTrans']
+         return loss_states, reg_loss_func, cls_loss_func
+ 
+     def val(self, epoch, data_loader, local_rank):
+diff --git a/src/utils/circuit_utils.py b/src/utils/circuit_utils.py
+index a34fa56..be4ff89 100644
+--- a/src/utils/circuit_utils.py
++++ b/src/utils/circuit_utils.py
+@@ -3,6 +3,7 @@ Utility functions for circuit: including random pattern generation, logic simula
+     reconvergence identification, 
+ '''
+ import torch
++import numpy as np
+ from numpy.random import randint
+ import copy
+ from collections import Counter
+@@ -1098,5 +1099,62 @@ def simulator_truth_table_random(x_data, PI_indexes, level_list, fanin_list, gat
+ 
+         for idx in range(len(x_data)):
+             truth_table[idx].append(state[idx])
+-    
++
++    return truth_table
++
++
++def simulator_truth_table_markov(x_data, PI_indexes, level_list, fanin_list, gate_to_index,
++                                 num_patterns=15000, flip_prob=0.1):
++    """PA2-3: Markov stimulus. Each PI flips with probability `flip_prob` per cycle.
++
++    Yields an ordered per-node sequence so transition counts on consecutive
++    patterns are well-defined and topology-dependent.
++
++    - x_data: node features, used to determine gate types for simulation
++    - PI_indexes: which nodes are primary inputs (PIs)
++    - level_list: nodes grouped by logic level, for levelized simulation
++    - fanin_list: for each node, which nodes feed into it (for simulation)
++    - gate_to_index: mapping from gate type to index, used in logic function
++    """
++    # Initialize the truth table: storage for the 0/1 sequence of each node
++    truth_table = [[] for _ in range(len(x_data))]
++    no_PIs = len(PI_indexes)
++
++    # Initial state: Randomly assign the first pattern to the Primary Inputs (PIs)
++    pi_vector = randint(2, size=no_PIs)
++
++    for pattern_idx in range(num_patterns):
++        # Update PI state based on Markov Chain transition probability (flip_prob)
++        if pattern_idx > 0:
++            # flip_mask[i] is True if PI i should toggle its value in this cycle
++            flip_mask = np.random.rand(no_PIs) < flip_prob
++            # Toggle logic: 1 - current_value flips 0->1 or 1->0
++            pi_vector = np.where(flip_mask, 1 - pi_vector, pi_vector)
++
++        # Current circuit snapshot, "-1" denotes an uncomputed node
++        state = [-1] * len(x_data)
++
++        # Map current PI vector values back to their corresponding global node indices
++        for k, pi_idx in enumerate(PI_indexes):
++            state[pi_idx] = int(pi_vector[k])
++
++        # Simulate the circuit level by level, computing the output of each gate based on its inputs
++        for level in range(1, len(level_list), 1):
++            for node_idx in level_list[level]:
++                # Gather pre-computed fan-in signals from lower levels
++                source_signals = []
++                for pre_idx in fanin_list[node_idx]:
++                    source_signals.append(state[pre_idx])
++
++                # Perform gate-level logic evaluation only if all input signals are available (i.e., not -1)
++                if len(source_signals) > 0:
++                    gate_type = x_data[node_idx][1]
++                    # 'logic' function handles the specific boolean operation (AND, OR, etc.)
++                    res = logic(gate_type, source_signals, gate_to_index)
++                    state[node_idx] = res
++
++        # Collect results for each node for the current pattern and append to the truth table
++        for idx in range(len(x_data)):
++            truth_table[idx].append(state[idx])
++
+     return truth_table
+diff --git a/src/utils/utils.py b/src/utils/utils.py
+index 78639be..755cf76 100644
+--- a/src/utils/utils.py
++++ b/src/utils/utils.py
+@@ -184,21 +184,39 @@ def generate_orthogonal_vectors(n, dim):
+ 
+     return vectors, max_cos_sim
+ 
+-def generate_hs_init(G, hs, no_dim):
+-    max_sim = 0
++# 定義一個函數來生成初始的 pi 向量，並計算它們之間的最大相似度
++def generate_hs_init(G, hs, no_dim, homo_pi_init=False):
++    # G: 圖結構資料（含節點資訊）；hs: 節點隱藏狀態張量；
++    # no_dim: 向量維度；homo_pi_init: 是否使用同質初始化
++    max_sim = 0  # 初始化整體最大相似度為 0
+     if G.batch == None:
++        # 若沒有 batch 資訊，表示只有一張圖
+         batch_size = 1
+     else:
++        # 取 batch 中最大的索引值加 1，得到批次內的圖數量
+         batch_size = G.batch.max().item() + 1
+-    for batch_idx in range(batch_size):
++    for batch_idx in range(batch_size):  # 逐一遍歷每張圖
+         if G.batch == None:
++            # 單圖情況：找出所有 forward_level 為 0 的節點（即主要輸入節點 PI）
+             pi_mask = (G.forward_level == 0)
+         else:
++            # 多圖情況：同時篩選屬於當前批次且 forward_level 為 0 的節點
+             pi_mask = (G.batch == batch_idx) & (G.forward_level == 0)
+-        pi_node = G.forward_index[pi_mask]
+-        pi_vec, batch_max_sim = generate_orthogonal_vectors(len(pi_node), no_dim)
++        pi_node = G.forward_index[pi_mask]  # 取出 PI 節點的實際索引
++        if homo_pi_init:
++            # 同質初始化：所有 PI 節點共用同一個單位向量（各維度均等分配）
++            shared = np.ones(no_dim, dtype=np.float32) / np.sqrt(no_dim)
++            # 將相同的向量複製給每個 PI 節點
++            pi_vec = [shared for _ in range(len(pi_node))]
++            # 所有向量完全相同，相似度為 1.0
++            batch_max_sim = 1.0
++        else:
++            # 非同質初始化：呼叫函數生成盡量互相正交的向量，並回傳最大相似度
++            pi_vec, batch_max_sim = generate_orthogonal_vectors(len(pi_node), no_dim)
+         if batch_max_sim > max_sim:
++            # 更新全域最大相似度（取所有批次中的最大值）
+             max_sim = batch_max_sim
++        # 將生成的向量指派給對應 PI 節點的隱藏狀態
+         hs[pi_node] = torch.tensor(pi_vec, dtype=torch.float)
+-    
+-    return hs, max_sim
++
++    return hs, max_sim  # 回傳更新後的隱藏狀態與最大相似度

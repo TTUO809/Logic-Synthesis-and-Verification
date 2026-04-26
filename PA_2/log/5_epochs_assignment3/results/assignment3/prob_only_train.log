@@ -1,0 +1,117 @@
+[INFO] 2026-04-26 00:29:13,072 run: Running torch.distributed.run with args: ['/home/c_1006/miniconda3/envs/deepgate2/lib/python3.8/site-packages/torch/distributed/run.py', '--nproc_per_node=1', '--master_port=29500', './main.py', 'prob', '--exp_id', 'PA3_assignment3/prob_only', '--data_dir', '../data/train', '--label_file', 'labels_markov.npz', '--dim_hidden', '64', '--reg_loss', 'l1', '--cls_loss', 'bce', '--arch', 'mlpgnn', '--Prob_weight', '3', '--RC_weight', '1', '--Func_weight', '2', '--Trans_weight', '0', '--num_rounds', '1', '--gpus', '0', '--batch_size', '32', '--num_workers', '4', '--num_epochs', '5', '--no_rc']
+[INFO] 2026-04-26 00:29:13,073 run: Using nproc_per_node=1.
+[INFO] 2026-04-26 00:29:13,073 api: Starting elastic_operator with launch configs:
+  entrypoint       : ./main.py
+  min_nodes        : 1
+  max_nodes        : 1
+  nproc_per_node   : 1
+  run_id           : none
+  rdzv_backend     : static
+  rdzv_endpoint    : 127.0.0.1:29500
+  rdzv_configs     : {'rank': 0, 'timeout': 900}
+  max_restarts     : 3
+  monitor_interval : 5
+  log_dir          : None
+  metrics_cfg      : {}
+
+[INFO] 2026-04-26 00:29:13,074 local_elastic_agent: log directory set to: /tmp/torchelastic_kfn022u8/none_feoy9p1m
+[INFO] 2026-04-26 00:29:13,074 api: [default] starting workers for entrypoint: python3
+[INFO] 2026-04-26 00:29:13,074 api: [default] Rendezvous'ing worker group
+[INFO] 2026-04-26 00:29:13,074 static_tcp_rendezvous: Creating TCPStore as the c10d::Store implementation
+/home/c_1006/miniconda3/envs/deepgate2/lib/python3.8/site-packages/torch/distributed/elastic/utils/store.py:52: FutureWarning: This is an experimental API and will be changed in future.
+  warnings.warn(
+[INFO] 2026-04-26 00:29:13,074 api: [default] Rendezvous complete for workers. Result:
+  restart_count=0
+  master_addr=127.0.0.1
+  master_port=29500
+  group_rank=0
+  group_world_size=1
+  local_ranks=[0]
+  role_ranks=[0]
+  global_ranks=[0]
+  role_world_sizes=[1]
+  global_world_sizes=[1]
+
+[INFO] 2026-04-26 00:29:13,075 api: [default] Starting worker group
+[INFO] 2026-04-26 00:29:13,075 __init__: Setting worker0 reply file to: /tmp/torchelastic_kfn022u8/none_feoy9p1m/attempt_0/0/error.json
+The output will be saved to  /home/c_1006/DeepGate2/src/../exp/prob/PA3_assignment3/prob_only
+Setting random seed for reproductivity..
+==> Using settings Namespace(Func_weight=2.0, Prob_weight=3.0, RC_weight=1.0, Trans_weight=0.0, activation_layer='relu', aggr_function='tfmlp', aggr_state=False, arch='mlpgnn', batch_size=32, circuit_file='graphs.npz', cls_loss='bce', cop_only=False, custom_backward=False, data_dir='../data/train', debug=0, debug_dir='/home/c_1006/DeepGate2/src/../exp/prob/PA3_assignment3/prob_only/debug', diff_multiplier=10, dim_edge_feature=16, dim_hidden=64, dim_mlp=32, dim_node_feature=3, dim_pred=1, disable_encode=False, enable_aig=True, eplison=0.4, exp_depth=3, exp_dir='/home/c_1006/DeepGate2/src/../exp/prob', exp_id='PA3_assignment3/prob_only', gate_to_index={'PI': 0, 'AND': 1, 'NOT': 2}, gate_types='*', gpus=[0], gpus_str='0', grad_clip=0.0, hide_data_time=False, homo_pi_init=False, init_hidden=False, intermediate_supervision=False, k_step=10.0, label_file='labels_markov.npz', load_model='', local_rank=0, logic_diff_embedding='positional', logic_implication=False, lr=0.0001, lr_step=[30, 45], mask=False, master_batch_size=-1, max_n=10, metric='loss', min_n=3, mul_mlp=False, n_pairs=10000, no_func=False, no_keep_input=False, no_node_cop=False, no_rc=True, no_reverse=False, no_trans=False, node_reconv=False, norm_layer='batchnorm', not_cuda_benchmark=False, num_aggr=3, num_epochs=5, num_fc=3, num_gate_types=3, num_iters=-1, num_rounds=1, num_workers=4, p_geo=0.4, p_k_2=0.3, predict_diff=False, pretrained_path='../exp/pretrained/pretrain_l1/model_last.pth', print_iter=0, prob_loss=False, prob_weight=0.1, random_seed=208, reconv_skip_connection=False, reg_loss='l1', reload_dataset=False, resume=False, reverse=True, root_dir='/home/c_1006/DeepGate2/src/..', sat_loss='smoothstep', save_all=False, save_dir='/home/c_1006/DeepGate2/src/../exp/prob/PA3_assignment3/prob_only', save_intervals=5, seperate_hidden=False, small_train=False, spc_exp_id='', task='prob', temperature=0.01, test_data_dir=None, test_split='test', trainval_split=0.9, un_directed=False, update_function='gru', use_aig=False, use_edge_attr=False, use_logic_diff=False, val_only=False, weight_decay=1e-10, wx_mlp=False, wx_update=False)
+Training in single device:  cuda:0
+==> Loading dataset from:  ../data/train
+Size:  9756
+Splitting the dataset into training and validation sets..
+# training circuits:  8780
+# validation circuits:  976
+==> Creating model...
+MLPGate(
+  (aggr_and_strc): TFMLP(
+    (attn_lin): Linear(in_features=128, out_features=1, bias=True)
+    (msg_q): Linear(in_features=64, out_features=64, bias=True)
+    (msg_k): Linear(in_features=64, out_features=64, bias=True)
+    (msg_v): Linear(in_features=64, out_features=64, bias=True)
+  )
+  (aggr_and_func): TFMLP(
+    (attn_lin): Linear(in_features=128, out_features=1, bias=True)
+    (msg_q): Linear(in_features=128, out_features=64, bias=True)
+    (msg_k): Linear(in_features=128, out_features=64, bias=True)
+    (msg_v): Linear(in_features=128, out_features=64, bias=True)
+  )
+  (aggr_not_strc): TFMLP(
+    (attn_lin): Linear(in_features=128, out_features=1, bias=True)
+    (msg_q): Linear(in_features=64, out_features=64, bias=True)
+    (msg_k): Linear(in_features=64, out_features=64, bias=True)
+    (msg_v): Linear(in_features=64, out_features=64, bias=True)
+  )
+  (aggr_not_func): TFMLP(
+    (attn_lin): Linear(in_features=128, out_features=1, bias=True)
+    (msg_q): Linear(in_features=64, out_features=64, bias=True)
+    (msg_k): Linear(in_features=64, out_features=64, bias=True)
+    (msg_v): Linear(in_features=64, out_features=64, bias=True)
+  )
+  (update_and_strc): GRU(64, 64)
+  (update_and_func): GRU(64, 64)
+  (update_not_strc): GRU(64, 64)
+  (update_not_func): GRU(64, 64)
+  (readout_prob): MLP(
+    (fc): Sequential(
+      (0): Linear(in_features=64, out_features=32, bias=True)
+      (1): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ReLU(inplace=True)
+      (3): Dropout(p=0.2, inplace=False)
+      (4): Linear(in_features=32, out_features=32, bias=True)
+      (5): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (6): ReLU(inplace=True)
+      (7): Dropout(p=0.2, inplace=False)
+      (8): Linear(in_features=32, out_features=1, bias=True)
+    )
+  )
+  (readout_trans): MLP(
+    (fc): Sequential(
+      (0): Linear(in_features=64, out_features=32, bias=True)
+      (1): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ReLU(inplace=True)
+      (3): Dropout(p=0.2, inplace=False)
+      (4): Linear(in_features=32, out_features=32, bias=True)
+      (5): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (6): ReLU(inplace=True)
+      (7): Dropout(p=0.2, inplace=False)
+      (8): Linear(in_features=32, out_features=1, bias=True)
+      (9): Sigmoid()
+    )
+  )
+  (readout_rc): MLP(
+    (fc): Sequential(
+      (0): Linear(in_features=128, out_features=32, bias=True)
+      (1): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): Dropout(p=0.2, inplace=False)
+      (3): Linear(in_features=32, out_features=32, bias=True)
+      (4): BatchNorm1d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (5): Dropout(p=0.2, inplace=False)
+      (6): Linear(in_features=32, out_features=1, bias=True)
+      (7): Sigmoid()
+    )
+  )
+  (hf_emd_int): Linear(in_features=1, out_features=64, bias=True)
+)
+==> Starting training...

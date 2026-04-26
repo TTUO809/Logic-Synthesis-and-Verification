@@ -1,0 +1,144 @@
+
+======================================================================
+  PHASE 1: Generate Markov-stimulus labels (flip_prob=0.1)
+  Output : /home/c_1006/DeepGate2/data/train/labels_markov.npz
+======================================================================
+  [SKIP] /home/c_1006/DeepGate2/data/train/labels_markov.npz already exists.
+
+======================================================================
+  PHASE 2 experiment = prob_only  (Trans_weight=0)  |  公曆 20廿六年 四月 廿六日 週日 一時35分七秒
+======================================================================
+  [SKIP] prob_only already complete (epoch 5 >= 5). Extracting metrics.
+======================================================================
+  SUMMARY  experiment = prob_only
+  Source log : /home/c_1006/DeepGate2/exp/prob/PA2_assignment3/prob_only/logs_2026-04-25-22-37/log.txt
+  Generated  : 公曆 20廿六年 四月 廿六日 週日 一時35分七秒
+======================================================================
+
+  Per-epoch validation metrics:
+  Epoch | Val LProb (↓) | Val LRC (↓) | Val LFunc (↓) | Val LTrans (↓) | Val ACC (↑)
+  ------|---------------|-------------|---------------|----------------|------------
+      1 |      0.161359 |    0.581490 |      0.274962 |       0.461513 | 0.806129
+      2 |      0.087858 |    0.537242 |      0.194291 |       0.459207 | 0.781613
+      3 |      0.081180 |    0.472579 |      0.164890 |       0.458344 | 0.806129
+      4 |      0.064695 |    0.410191 |      0.152953 |       0.464446 | 0.809355
+      5 |      0.051210 |    0.338238 |      0.143175 |       0.460010 | 0.813226
+
+  === Final Epoch ===
+  Final epoch : 5
+  Val LProb   : 0.051210
+  Val LRC     : 0.338238
+  Val LFunc   : 0.143175
+  Val LTrans  : 0.460010
+  Val ACC     : 0.813226
+
+
+======================================================================
+  PHASE 2 experiment = with_trans  (Trans_weight=2)  |  公曆 20廿六年 四月 廿六日 週日 一時35分七秒
+======================================================================
+  [SKIP] with_trans already complete (epoch 5 >= 5). Extracting metrics.
+======================================================================
+  SUMMARY  experiment = with_trans
+  Source log : /home/c_1006/DeepGate2/exp/prob/PA2_assignment3/with_trans/logs_2026-04-25-23-14/log.txt
+  Generated  : 公曆 20廿六年 四月 廿六日 週日 一時35分七秒
+======================================================================
+
+  Per-epoch validation metrics:
+  Epoch | Val LProb (↓) | Val LRC (↓) | Val LFunc (↓) | Val LTrans (↓) | Val ACC (↑)
+  ------|---------------|-------------|---------------|----------------|------------
+      1 |      0.158429 |    0.581465 |      0.276199 |       0.307786 | 0.802903
+      2 |      0.093279 |    0.537239 |      0.196677 |       0.244371 | 0.778065
+      3 |      0.070607 |    0.472579 |      0.172374 |       0.140380 | 0.802581
+      4 |      0.065235 |    0.410187 |      0.159295 |       0.082595 | 0.810000
+      5 |      0.054054 |    0.338235 |      0.150468 |       0.051691 | 0.803548
+
+  === Final Epoch ===
+  Final epoch : 5
+  Val LProb   : 0.054054
+  Val LRC     : 0.338235
+  Val LFunc   : 0.150468
+  Val LTrans  : 0.051691
+  Val ACC     : 0.803548
+
+
+======================================================================
+  PHASE 3: Evaluate transition-prob predictions on the validation split
+======================================================================
+
+  [SKIP] prob_only: eval log already exists and is newer than checkpoint.
+         (/home/c_1006/LSV/PA_2/results/assignment3/prob_only_eval.log)
+  ---- existing log ----
+The output will be saved to  /home/c_1006/DeepGate2/src/../exp/prob/PA2_assignment3/prob_only
+loaded /home/c_1006/DeepGate2/src/../exp/prob/PA2_assignment3/prob_only/model_last.pth, epoch 5
+======================================================================
+  PA3 SWITCHING-PROBABILITY EVALUATION
+  Checkpoint    : /home/c_1006/DeepGate2/src/../exp/prob/PA2_assignment3/prob_only/model_last.pth
+  Data dir      : ../data/train
+  Label file    : labels_markov.npz
+  Circuits used : 9756
+  Total nodes   : 3412741
+======================================================================
+  L1(prob_pred, prob_target)        = 0.049467
+  L1(2p(1-p)_pred, trans_target)    = 0.248469   <-- analytic baseline
+  L1(trans_pred, trans_target)      = 0.461578   <-- model
+  Gap (analytic - model)            = -0.213110   (- model worse than baseline)
+
+  Per-gate-type L1 (model):
+    type  |   N nodes  |   L1 trans
+    ------|------------|-----------
+    PI    |     533440 | 0.604731
+    AND   |    1487449 | 0.425856
+    NOT   |    1391852 | 0.444890
+  ---- end of log ----
+
+  [SKIP] with_trans: eval log already exists and is newer than checkpoint.
+         (/home/c_1006/LSV/PA_2/results/assignment3/with_trans_eval.log)
+  ---- existing log ----
+The output will be saved to  /home/c_1006/DeepGate2/src/../exp/prob/PA2_assignment3/with_trans
+loaded /home/c_1006/DeepGate2/src/../exp/prob/PA2_assignment3/with_trans/model_last.pth, epoch 5
+======================================================================
+  PA3 SWITCHING-PROBABILITY EVALUATION
+  Checkpoint    : /home/c_1006/DeepGate2/src/../exp/prob/PA2_assignment3/with_trans/model_last.pth
+  Data dir      : ../data/train
+  Label file    : labels_markov.npz
+  Circuits used : 9756
+  Total nodes   : 3412741
+======================================================================
+  L1(prob_pred, prob_target)        = 0.053545
+  L1(2p(1-p)_pred, trans_target)    = 0.256738   <-- analytic baseline
+  L1(trans_pred, trans_target)      = 0.051427   <-- model
+  Gap (analytic - model)            = +0.205311   (+ model beats baseline)
+
+  Per-gate-type L1 (model):
+    type  |   N nodes  |   L1 trans
+    ------|------------|-----------
+    PI    |     533440 | 0.032974
+    AND   |    1487449 | 0.047775
+    NOT   |    1391852 | 0.062403
+  ---- end of log ----
+
+======================================================================
+  CROSS-EXPERIMENT COMPARISON
+  公曆 20廿六年 四月 廿六日 週日 一時35分七秒
+======================================================================
+experiment   | Val LProb (↓) | Val LRC (↓) | Val LFunc (↓) | Val LTrans (↓) | Val ACC (↑)
+-------------|---------------|-------------|---------------|----------------|------------
+prob_only    |      0.051210 |    0.338238 |      0.143175 |       0.460010 | 0.813226
+with_trans   |      0.054054 |    0.338235 |      0.150468 |       0.051691 | 0.803548
+
+Eval summaries (model L1 vs analytic 2p(1-p) baseline) are in:
+  /home/c_1006/LSV/PA_2/results/assignment3/prob_only_eval.log
+  /home/c_1006/LSV/PA_2/results/assignment3/with_trans_eval.log
+
+Interpretation:
+  - with_trans should improve LTrans materially over prob_only (which has Trans_weight=0).
+  - In test_trans.py output, a positive 'Gap (analytic - model)' means the GNN learned
+    structure beyond the closed-form 2p(1-p) baseline.
+  - PI nodes have trans_prob ≈ flip_prob = 0.1 by construction; expect small L1 there.
+
+Results saved to: /home/c_1006/LSV/PA_2/results/assignment3/
+  prepare_dataset_markov.log   — label generation log
+  {name}_train.log             — full training stdout per experiment
+  {name}_summary.txt           — epoch-by-epoch metrics
+  {name}_eval.log              — test_trans.py output (L1 + per-gate-type)
+  comparison.txt               — cross-experiment comparison table

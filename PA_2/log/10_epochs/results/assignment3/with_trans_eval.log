@@ -1,0 +1,21 @@
+The output will be saved to  /home/c_1006/DeepGate2/src/../exp/prob/PA2_assignment3/with_trans
+loaded /home/c_1006/DeepGate2/src/../exp/prob/PA2_assignment3/with_trans/model_last.pth, epoch 10
+======================================================================
+  PA3 SWITCHING-PROBABILITY EVALUATION
+  Checkpoint    : /home/c_1006/DeepGate2/src/../exp/prob/PA2_assignment3/with_trans/model_last.pth
+  Data dir      : ../data/train
+  Label file    : labels_markov.npz
+  Circuits used : 9756
+  Total nodes   : 3412741
+======================================================================
+  L1(prob_pred, prob_target)        = 0.045719
+  L1(2p(1-p)_pred, trans_target)    = 0.255825   <-- analytic baseline
+  L1(trans_pred, trans_target)      = 0.025580   <-- model
+  Gap (analytic - model)            = +0.230246   (+ model beats baseline)
+
+  Per-gate-type L1 (model):
+    type  |   N nodes  |   L1 trans
+    ------|------------|-----------
+    PI    |     533440 | 0.025038
+    AND   |    1487449 | 0.024455
+    NOT   |    1391852 | 0.026990
