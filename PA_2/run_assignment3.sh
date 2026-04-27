@@ -357,3 +357,11 @@ echo "  {name}_train.log             — full training stdout per experiment"   
 echo "  {name}_summary.txt           — epoch-by-epoch metrics"                      # 說明：每個實驗的摘要文件，包含每輪次的指標數據
 echo "  {name}_eval.log              — test_trans.py output (L1 + per-gate-type)"   # 說明：每個實驗的評估日誌文件
 echo "  comparison.txt               — cross-experiment comparison table"           # 說明：跨實驗比較的總結表格文件
+
+# ── auto-generate charts ───────────────────────────────────────────────────
+CHARTS_DIR="${LOG_BASE}/../charts"
+echo ""
+echo "Generating charts from logs..."
+python3 "${SCRIPT_DIR}/test/gen_charts.py" "${LOG_BASE}" --out "${CHARTS_DIR}" \
+    && echo "Charts saved to: ${CHARTS_DIR}/" \
+    || echo "[WARN] chart generation failed (non-fatal)"

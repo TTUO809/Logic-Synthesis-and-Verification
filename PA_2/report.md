@@ -9,17 +9,17 @@
 
 ## Table of Contents
 
-- [Assignment 1：Hidden layer dimensions](#assignment-1-hidden-layer-dimensions)
+- [Assignment 1：Hidden layer dimensions](#assignment-1hidden-layer-dimensions)
   - [Experiment setup](#experiment-setup)
   - [Per-epoch validation metrics](#per-epoch-validation-metrics)
   - [Final results comparison (validation set)](#final-results-comparison-validation-set) 
   - [Observations and analysis](#observations-and-analysis) 
-- [Assignment 2：Ablation study](#assignment-2-ablation-study)
+- [Assignment 2：Ablation study](#assignment-2ablation-study)
   - [Experiment setup](#experiment-setup-1)
   - [Per-epoch validation metrics](#per-epoch-validation-metrics-1)
   - [Final results comparison (validation set)](#final-results-comparison-validation-set-1)
   - [Observations and analysis](#observations-and-analysis-1)
-- [Assignment 3：Switching Probability Prediction](#assignment-3-switching-probability-prediction)
+- [Assignment 3：Switching Probability Prediction](#assignment-3switching-probability-prediction)
   - [Problem Definition](#problem-definition)
   - [Methodology](#methodology)
   - [Results](#results)
@@ -30,6 +30,8 @@
 ## Assignment 1：Hidden layer dimensions
 
 ### Experiment setup
+
+<div style="width: 90%;">
 
 | 項目 | 設定 |
 |---|---|
@@ -45,9 +47,26 @@
 - **Val LProb**（訊號概率 L1 損失，越低越好）
 - **Val ACC**（TT 距離排名準確率，越高越好）
 
+</div>
+
 ---
 
 ### Per-epoch validation metrics
+
+<div style="display:flex;gap:10px;align-items:flex-start;">
+<div style="flex:1;min-width:0;">
+
+![A1 Val LProb over Epochs](log/10_epochs/charts/a1_lprob.png)
+
+</div>
+<div style="flex:1;min-width:0;">
+
+![A1 Val ACC over Epochs](log/10_epochs/charts/a1_acc.png)
+
+</div>
+</div>
+
+<div style="width: 50%;">
 
 #### dim_hidden = 32（10 epochs）
 
@@ -64,6 +83,9 @@
 | 9 | 0.038039 | 0.858387 |
 | **10** | **0.035522** | **0.867097** |
 
+</div>
+<div style="width: 50%;">
+
 #### dim_hidden = 64（10 epochs）
 
 | Epoch | Val LProb ↓ | Val ACC ↑ |
@@ -78,6 +100,9 @@
 | 8 | 0.029870 | 0.901935 |
 | 9 | 0.028979 | 0.907097 |
 | **10** | **0.024337** | **0.910968** |
+
+</div>
+<div style="width: 50%;">
 
 #### dim_hidden = 128（10 epochs）
 
@@ -94,9 +119,13 @@
 | 9 | 0.027055 | 0.908387 |
 | **10** | **0.023696** | **0.911935** |
 
+</div>
+
 ---
 
 ### Final results comparison (validation set)
+
+<img src="log/10_epochs/charts/a1_final.png" style="width:90%;" />
 
 | dim_hidden | Val LProb (Signal Probability) ↓ | Val ACC (Accuracy of TT distance prediction) ↑ | Best ACC ↑ | Epochs |
 |:----------:|:---:|:---:|:---:|:------:|
@@ -119,11 +148,15 @@ dim=32 在 10 epochs 的最終 Val LProb（0.035522）只略低於 dim=64 在 ep
 
 **3. ACC 在 10 epochs 後分化更清晰**
 
+<div style="width: 50%;">
+
 | 維度 | 5 ep ACC | 10 ep ACC | 增量 |
 |:---:|:---:|:---:|:---:|
 | 32 | 0.828710 | 0.867097 | +3.84 pp |
 | 64 | 0.852258 | 0.910968 | +5.87 pp |
 | 128 | 0.855161 | 0.911935 | +5.68 pp |
+
+</div>
 
 dim=64 在 10 epochs 的增益（+5.87 pp）最大，顯示該維度的學習效率最高；dim=128 與 dim=64 的 ACC 差距從 5 ep 的 0.29 pp 進一步收窄至 10 ep 的 0.10 pp，呈現容量飽和的典型特徵。
 
@@ -137,6 +170,8 @@ dim=128 的最終 LProb（0.023696）比 dim=64（0.024337）僅低約 2.6%（�
 
 ### Experiment setup
 
+<div style="width: 90%;">
+
 | 項目 | 設定 |
 |---|---|
 | 模型架構 | DeepGate2（MLP+GNN，`--arch mlpgnn`，`dim_hidden=64`） |
@@ -146,13 +181,19 @@ dim=128 的最終 LProb（0.023696）比 dim=64（0.024337）僅低約 2.6%（�
 | 其他超參 | `batch_size=32`、`num_workers=4`、`num_rounds=1` |
 | 備註 | 訓練資料缺少 RC 標籤，全部加入 `--no_rc`（LRC 為 dummy pair，不納入分析） |
 
+</div>
+
 **Ablation experiments:**
+
+<div style="width: 90%;">
 
 | 實驗名稱 | 額外參數 | 消融目標 |
 |---|---|---|
 | baseline | —— | 完整 DeepGate2（正交 PI 初始化 + pairwise TT loss） |
 | no_tt_loss | `--no_func` | 移除 pairwise TT loss（LFunc 項） |
 | homo_pi_init | `--homo_pi_init` | 改用同質 PI 初始化（取代正交初始化） |
+
+</div>
 
 **Evaluation metrics:**
 - **Val LProb**（訊號概率 L1 損失，越低越好）
@@ -163,7 +204,33 @@ dim=128 的最終 LProb（0.023696）比 dim=64（0.024337）僅低約 2.6%（�
 
 ### Per-epoch validation metrics
 
+<div style="display:flex;gap:10px;align-items:flex-start;">
+<div style="flex:1;min-width:0;">
+
+![A2 Val LProb over Epochs](log/10_epochs/charts/a2_lprob.png)
+
+</div>
+<div style="flex:1;min-width:0;">
+
+![A2 Val LFunc over Epochs](log/10_epochs/charts/a2_lfunc.png)
+
+</div>
+</div>
+
+<div style="display:flex;gap:10px;align-items:flex-start;">
+<div style="flex:1;min-width:0;">
+
+![A2 Val ACC over Epochs](log/10_epochs/charts/a2_acc.png)
+
+</div>
+<div style="flex:1;min-width:0;">
+
+</div>
+</div>
+
 #### baseline
+
+<div style="width: 50%;">
 
 | Epoch | Val LProb ↓ | Val LFunc ↓ | Val ACC ↑ |
 |------:|------------:|------------:|----------:|
@@ -178,7 +245,11 @@ dim=128 的最終 LProb（0.023696）比 dim=64（0.024337）僅低約 2.6%（�
 | 9 | 0.028626 | 0.126300 | 0.909032 |
 | **10** | **0.024151** | **0.125278** | **0.910645** |
 
+</div>
+
 #### no_tt_loss（Remove TT loss）
+
+<div style="width: 50%;">
 
 | Epoch | Val LProb ↓ | Val LFunc ↓ | Val ACC ↑ |
 |------:|------------:|------------:|----------:|
@@ -193,7 +264,11 @@ dim=128 的最終 LProb（0.023696）比 dim=64（0.024337）僅低約 2.6%（�
 | 9 | 0.027370 | 0.000000 | 0.762903 |
 | **10** | **0.024276** | **0.000000** | **0.753871** |
 
+</div>
+
 #### homo_pi_init（Homogeneous PI initialization）
+
+<div style="width: 50%;">
 
 | Epoch | Val LProb ↓ | Val LFunc ↓ | Val ACC ↑ |
 |------:|------------:|------------:|----------:|
@@ -208,9 +283,13 @@ dim=128 的最終 LProb（0.023696）比 dim=64（0.024337）僅低約 2.6%（�
 | 9 | 0.031511 | 0.130547 | 0.846452 |
 | **10** | **0.025419** | **0.129545** | **0.863226** |
 
+</div>
+
 ---
 
 ### Final results comparison (validation set)
+
+<img src="log/10_epochs/charts/a2_final.png" style="width:100%;" />
 
 | Experiment | Val LProb ↓ | Val LFunc ↓ | Val ACC ↑ | ACC Change |
 |---|:---:|:---:|:---:|:---:|
@@ -264,7 +343,7 @@ Signal probability 與 switching probability 並不等價：兩個訊號同樣 5
 
 > **路徑與程式碼說明**
 > 本作業在 DeepGate2 上做了「資料管線 → 模型 → 訓練 → 評估」四層的修改，具體檔案、診斷與差異請參考：
-> - 修改總表：[README.md § Modifications to DeepGate2 → Assignment 3](README.md#deepgate2-modifications)
+> - 修改總表：[README.md § Modifications to DeepGate2 → Assignment 3](README.md)
 > - 與 upstream main 的完整 diff：[deepgate2.patch](deepgate2.patch)
 > - 跑實驗的腳本：[run_assignment3.sh](run_assignment3.sh)（Phase 1=label gen，Phase 2=train×2，Phase 3=eval，Phase 4=compare）
 
@@ -341,7 +420,35 @@ LTrans 與既有三個 loss 共用同一個 `loss_states` dict，因此會自動
 ### Results
 
 #### 1. Per-epoch validation metrics
+
+<div style="display:flex;gap:10px;align-items:flex-start;">
+<div style="flex:1;min-width:0;">
+
+![A3 Val LTrans over Epochs](log/10_epochs/charts/a3_ltrans.png)
+
+</div>
+<div style="flex:1;min-width:0;">
+
+![A3 Val LProb over Epochs](log/10_epochs/charts/a3_lprob.png)
+
+</div>
+</div>
+
+<div style="display:flex;gap:10px;align-items:flex-start;">
+<div style="flex:1;min-width:0;">
+
+![A3 Val ACC over Epochs](log/10_epochs/charts/a3_acc.png)
+
+</div>
+<div style="flex:1;min-width:0;">
+
+</div>
+</div>
+
+
 ##### (1) prob_only（Trans_weight = 0, Control group）
+
+<div style="width: 70%;">
 
 | Epoch | Val LProb ↓ | Val LFunc ↓ | Val LTrans ↓ | Val ACC ↑ |
 |------:|------------:|------------:|-------------:|----------:|
@@ -356,7 +463,11 @@ LTrans 與既有三個 loss 共用同一個 `loss_states` dict，因此會自動
 | 9 | 0.040071 | 0.135200 | 0.460051 | 0.842903 |
 | **10** | **0.037693** | **0.134224** | **0.461819** | **0.845806** |
 
+</div>
+
 ##### (2) with_trans（Trans_weight = 2, Main group）
+
+<div style="width: 70%;">
 
 | Epoch | Val LProb ↓ | Val LFunc ↓ | Val LTrans ↓ | Val ACC ↑ |
 |------:|------------:|------------:|-------------:|----------:|
@@ -371,7 +482,11 @@ LTrans 與既有三個 loss 共用同一個 `loss_states` dict，因此會自動
 | 9 | 0.045867 | 0.136608 | 0.026071 | 0.824194 |
 | **10** | **0.046856** | **0.136056** | **0.026568** | **0.831935** |
 
+</div>
+
 #### 2. Final results comparison (validation set)
+
+<div style="width: 70%;">
 
 | 實驗 | Val LProb ↓ | Val LFunc ↓ | Val LTrans ↓ | Val ACC ↑ |
 |---|:---:|:---:|:---:|:---:|
@@ -379,15 +494,25 @@ LTrans 與既有三個 loss 共用同一個 `loss_states` dict，因此會自動
 | **with_trans** | 0.046856 | 0.136056 | **0.026568** | 0.831935 |
 | Δ (with_trans − prob_only) | +0.009 | +0.002 | **−0.435** | −0.014 |
 
+</div>
+
 #### 3. Switching probability prediction performance
 (test_trans.py, full dataset 9756 circuits, 3.4M nodes)
+
+<img src="log/10_epochs/charts/a3_switching.png" style="width:90%;" />
+
+<div style="width: 90%;">
 
 | 實驗 | L1(prob) | L1 analytic 2p(1−p) | L1(trans) 模型 | Gap (analytic−model) |
 |---|---------:|--------------------:|---------------:|---------------------:|
 | prob_only | 0.036752 | 0.249507 | 0.462986 | **−0.213**（模型輸 baseline） |
 | **with_trans** | 0.045719 | 0.255825 | **0.025580** | **+0.230**（模型擊敗 baseline） |
 
+</div>
+
 ##### By Gate Type
+
+<div style="width: 50%;">
 
 | Gate type | N nodes | prob_only L1 | with_trans L1 |
 |:---|---------:|-------------:|--------------:|
@@ -395,9 +520,13 @@ LTrans 與既有三個 loss 共用同一個 `loss_states` dict，因此會自動
 | AND | 1,487,449 | 0.438152 | **0.024455** |
 | NOT | 1,391,852 | 0.441946 | **0.026990** |
 
+</div>
+
 #### 4. Reference: 5-epoch checkpoint results
 
 **Final results comparison (validation set)**
+
+<div style="width: 70%;">
 
 | 實驗 | Val LProb ↓ | Val LFunc ↓ | Val LTrans ↓ | Val ACC ↑ |
 |---|:---:|:---:|:---:|:---:|
@@ -405,20 +534,30 @@ LTrans 與既有三個 loss 共用同一個 `loss_states` dict，因此會自動
 | with_trans (5ep) | 0.054054 | 0.150468 | **0.051691** | 0.803548 |
 | Δ (with_trans − prob_only) | +0.002844 | +0.007293 | **−0.408319** | −0.009678 |
 
+</div>
+
 **Switching probability prediction performance**
+
+<div style="width: 90%;">
 
 | 實驗 | L1(prob) | L1 analytic 2p(1−p) | L1(trans) 模型 | Gap (analytic−model) |
 |---|---------:|--------------------:|---------------:|---------------------:|
 | prob_only (5ep)  | 0.049467 | 0.248469 | 0.461578 | **−0.213**（模型輸 baseline） |
 | with_trans (5ep) | 0.053545 | 0.256738 | **0.051427** | **+0.205**（模型擊敗 baseline） |
 
+</div>
+
 **By gate type (5 epochs):**
+
+<div style="width: 50%;">
 
 | Gate type | N nodes | prob_only L1 | with_trans L1 |
 |:---|---------:|-------------:|--------------:|
 | PI  |   533,440 | 0.604731 | **0.032974** |
 | AND | 1,487,449 | 0.425856 | **0.047775** |
 | NOT | 1,391,852 | 0.444890 | **0.062403** |
+
+</div>
 
 **Quick 5ep → 10ep summary（with_trans）：**
 - LTrans 0.0514 → 0.0266（−48%）。

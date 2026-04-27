@@ -1,6 +1,7 @@
 # Exclude test directory
 PA_2/test/*
 !PA_2/test/env_final_check.py
+!PA_2/test/gen_charts.py
 
 
 # Python cache
