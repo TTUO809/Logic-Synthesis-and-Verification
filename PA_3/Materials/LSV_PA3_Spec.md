@@ -63,6 +63,11 @@ $$P = [P_{a^0}, P_{a^1}, \ldots, P_{a^{N-1}}]$$
 
 Used across assignments: **s13207**, **c2670**, **b20**
 
+> **Availability note (2026-05-16):**
+> - `c2670.bench` — **not in MapTune repo**, download from [ISCAS 85](https://www.pld.ttu.ee/~maksim/benchmarks/iscas85/bench/c2670.bench) and place in `MapTune/benchmarks/`
+> - `s13207.bench` — **not in MapTune repo**, download from [ISCAS 89](https://www.pld.ttu.ee/~maksim/benchmarks/iscas89/bench/s13207.bench) and place in `MapTune/benchmarks/`
+> - `b20.bench` — **not available**; use `b20_1.bench` (already in `MapTune/benchmarks/`) as the substitute
+
 ---
 
 ## Assignments

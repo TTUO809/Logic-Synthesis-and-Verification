@@ -15,9 +15,12 @@ PA_2/test/*
 !PA_2/test/env_final_check.py
 !PA_2/test/gen_charts.py
 
-# --- PA 3: Paper Assets ---
+# --- PA 3: Paper Assets & Runtime Artifacts ---
 # Exclude large paper/asset directory (MapTune resources)
 PA_3/Materials/Paper/MapTune/
+# ABC command history (generated in whichever dir abc is invoked)
+PA_3/abc.history
+abc.history
 
 # =================================================================
 # System, IDE, and Environment Artifacts
