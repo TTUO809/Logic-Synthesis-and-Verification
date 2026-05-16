@@ -1,17 +1,31 @@
-# Exclude test directory
+# =================================================================
+# Large Data and Binary Files
+# =================================================================
+# Exclude large numpy/archive data files
+*.npz
+*.tar.bz2
+
+# =================================================================
+# PA-Specific Rules
+# =================================================================
+
+# --- PA 2: Test Directory ---
+# Exclude all test files; re-include only essential scripts
 PA_2/test/*
 !PA_2/test/env_final_check.py
 !PA_2/test/gen_charts.py
 
+# --- PA 3: Paper Assets ---
+# Exclude large paper/asset directory (MapTune resources)
+PA_3/Materials/Paper/MapTune/
 
-# Python cache
+# =================================================================
+# System, IDE, and Environment Artifacts
+# =================================================================
+# Python bytecode and cache
 __pycache__/
 *.pyc
 *.pyo
 
-# Large data files
-*.npz
-*.tar.bz2
-
-# Editor
+# Local VS Code editor configurations (Path-dependent)
 .vscode/
