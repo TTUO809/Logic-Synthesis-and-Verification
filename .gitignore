@@ -5,6 +5,9 @@
 *.npz
 *.tar.bz2
 
+# Exclude logs
+*.log
+
 # =================================================================
 # PA-Specific Rules
 # =================================================================
@@ -32,3 +35,18 @@ __pycache__/
 
 # Local VS Code editor configurations (Path-dependent)
 .vscode/
+
+# =================================================================
+# LaTeX Documentation & Compilation Artifacts
+# =================================================================
+# Exclude latexmk configuration and engine-generated helper files
+*.latexmkrc
+*.aux
+*.fdb_latexmk
+*.fls
+*.out
+*.synctex.gz
+*.toc
+
+# Exclude compiled PDFs (regenerated from .tex source)
+main.pdf
